@@ -3,5 +3,13 @@ name = "fontview"
 version = "0.1.0"
 authors = ["Stallmanifold <stallmanifold@gmail.com>"]
 edition = "2018"
+build = "build.rs"
+description = "A shell utility for prototyping bitmapped fonts in computer graphics applications."
+keywords = ["games", "game development", "fonts", "graphics"]
 
 [dependencies]
+glfw = "0.25.0"
+log = "0.4.6"
+file_logger = { git = "https://github.com/stallmanifold/file-logger" }
+simple_cgmath = { git = "https://github.com/stallmanifold/simple-cgmath" }
+stb_image = "0.2.2"
