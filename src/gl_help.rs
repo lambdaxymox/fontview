@@ -326,14 +326,6 @@ pub fn parse_shader<P: AsRef<Path>, R: Read>(
     reader: &mut R, file_name: P, shader_str: &mut [u8]) -> Result<usize, ShaderCompilationError> {
 
     shader_str[0] = 0;
-    /*
-    let file = match File::open(&file_name) {
-        Ok(val) => val,
-        Err(_) => {
-            let disp = file_name.as_ref().display().to_string();
-            return Err(ShaderCompilationError::ShaderNotFound(disp));
-        }
-    };
 
     let mut reader = BufReader::new(file);
     */
@@ -400,15 +392,7 @@ pub fn create_shader<P: AsRef<Path>, R: Read>(
     info!("Creating shader from {}.\n", disp);
 
     let mut shader_string = vec![0; MAX_SHADER_LENGTH];
-    /*
-    let file = match File::open(&file_name) {
-        Ok(val) => val,
-        Err(_) => {
-            let disp = file_name.as_ref().display().to_string();
-            return Err(ShaderCompilationError::ShaderNotFound(disp));
-        }
-    };
-    */
+
     let bytes_read = match parse_shader(reader, &file_name, &mut shader_string) {
         Ok(val) => val,
         Err(e) => {
