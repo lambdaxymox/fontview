@@ -13,3 +13,6 @@ log = "0.4.6"
 file_logger = { git = "https://github.com/stallmanifold/file-logger" }
 simple_cgmath = { git = "https://github.com/stallmanifold/simple-cgmath" }
 stb_image = "0.2.2"
+
+[build-dependencies]
+gl_generator = "0.10.0"

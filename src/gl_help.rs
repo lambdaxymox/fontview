@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-use gl;
-use gl::types::{
+use crate::gl;
+use crate::gl::types::{
     GLboolean, GLchar, GLenum, GLfloat, GLint, GLubyte, GLuint
 };
 use glfw;
