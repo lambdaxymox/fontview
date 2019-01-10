@@ -326,9 +326,6 @@ pub fn parse_shader<P: AsRef<Path>, R: Read>(
     reader: &mut R, file_name: P, shader_str: &mut [u8]) -> Result<usize, ShaderCompilationError> {
 
     shader_str[0] = 0;
-
-    let mut reader = BufReader::new(file);
-    */
     let bytes_read = match reader.read(shader_str) {
         Ok(val) => val,
         Err(_) => {
