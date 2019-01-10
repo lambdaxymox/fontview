@@ -12,6 +12,9 @@ glfw = "0.25.0"
 log = "0.4.6"
 simple_cgmath = { git = "https://github.com/stallmanifold/simple-cgmath" }
 stb_image = "0.2.2"
+serde = "1.0.84"
+serde_derive = "1.0.84"
+serde_json = "1.0.34"
 
 [build-dependencies]
 gl_generator = "0.10.0"

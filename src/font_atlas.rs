@@ -10,7 +10,7 @@ pub struct Address {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct FontAtlas {
+pub struct FontAtlasMetadata {
     pub glyph_y_offsets: HashMap<char, f32>,
     pub glyph_widths: HashMap<char, f32>,
     pub glyph_coords: HashMap<char, Address>,
@@ -24,7 +24,7 @@ pub enum Error {
     CouldNotParseFontFile(String),
 }
 
-pub fn load<P: AsRef<Path>>(file: P) -> Result<FontAtlas, Error> {
+pub fn load<P: AsRef<Path>>(file: P) -> Result<FontAtlasMetadata, Error> {
     let data = match File::open(file.as_ref()) {
         Ok(handle) => handle,
         Err(_) => {
