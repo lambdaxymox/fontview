@@ -2,11 +2,7 @@ extern crate cgmath;
 extern crate glfw;
 extern crate log;
 extern crate stb_image;
-extern crate serde;
-extern crate serde_json;
-
-#[macro_use]
-extern crate serde_derive;
+extern crate bmfa;
 
 mod gl {
     include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -14,7 +10,6 @@ mod gl {
 
 mod gl_help;
 mod texture;
-mod font_atlas;
 
 
 use crate::gl::types::{
@@ -48,7 +43,7 @@ const ATLAS_ROWS: usize = 16;
 struct GameContext {
     gl: glh::GLState,
 }
-
+/*
 ///
 /// A `FontAtlas` is a bitmapped font sheet.
 ///
@@ -60,29 +55,20 @@ struct FontAtlas {
     glyph_coords: HashMap<char, font_atlas::Address>,
     buffer: TexImage2D,
 }
+*/
 
-/* load meta data file for font. we really only need the ascii value, width,
-height, and y_offset, but if you want to be super precise you have the other
-adjustment values there too */
-fn load_font_atlas<P: AsRef<Path>, Q: AsRef<Path>>(file_path: P, meta_path: Q) -> FontAtlas {
-    let metadata = font_atlas::load(meta_path).unwrap();
-    let buffer = texture::load_file(file_path).unwrap();
-
-    FontAtlas {
-        rows: metadata.rows,
-        columns: metadata.columns,
-        glyph_y_offsets: metadata.glyph_y_offsets,
-        glyph_widths: metadata.glyph_widths,
-        glyph_coords: metadata.glyph_coords,
-        buffer: buffer,
-    }
+///
+/// Load the bitmap font atlas file.
+///
+fn load_font_atlas<P: AsRef<Path>>(path: P) -> bmfa::BitmapFontAtlas {
+    bmfa::load(path).unwrap()
 }
 
 ///
 /// Print a string to the GLFW screen with the given font.
 ///
 fn text_to_vbo(
-    context: &glh::GLState, st: &str, atlas: &FontAtlas,
+    context: &glh::GLState, st: &str, atlas: &bmfa::BitmapFontAtlas,
     start_x: f32, start_y: f32, scale_px: f32,
     points_vbo: &mut GLuint, texcoords_vbo: &mut GLuint, point_count: &mut usize) {
 
@@ -323,13 +309,14 @@ fn main() {
     let tex = create_texture(ATLAS_IMAGE);
 
     unsafe {
-        // rendering defaults
+        // Rendering defaults.
         // gl::DepthFunc(gl::LESS); // set depth function
         // gl::Enable(gl::DEPTH_TEST);
-        gl::CullFace(gl::BACK);      // cull back face
-        gl::FrontFace(gl::CCW);      // GL_CCW for counter clock-wise
-        gl::Enable(gl::CULL_FACE); // cull face
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA); // partial transparency
+        gl::CullFace(gl::BACK);
+        gl::FrontFace(gl::CCW);
+        gl::Enable(gl::CULL_FACE);
+        // Partial transparency.
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.2, 0.2, 0.6, 1.0);
         gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
     }
