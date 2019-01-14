@@ -232,18 +232,20 @@ fn init_app() -> GameContext {
 }
 
 fn main() {
-    // start GL context with helper libraries
+    // Start GL context with helper libraries.
     let mut context = init_app();
 
-    let renderer = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::RENDERER) }); // get renderer string
-    let version = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::VERSION) }); // version as a string
+    // Get renderer string.
+    let renderer = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::RENDERER) });
+    // Get version as a string.
+    let version = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::VERSION) });
     println!("Renderer: {}", renderer);
     println!("OpenGL version supported {}", version);
 
-    /* load font meta-data (spacings for each glyph) */
+    // Load the font atlas.
     let font_atlas = load_font_atlas(ATLAS_IMAGE, ATLAS_META);
 
-    /* set a string of text for lower-case letters */
+    // Set a string of text for lower-case letters.
     let mut first_string_vp_vbo = 0;
     unsafe { 
         gl::GenBuffers(1, &mut first_string_vp_vbo);
@@ -280,7 +282,7 @@ fn main() {
         gl::EnableVertexAttribArray(1);
     }
 
-    /* second string of text for capital letters */
+    // Second string of text for capital letters.
     let mut second_string_vp_vbo = 0;
     unsafe {
         gl::GenBuffers(1, &mut second_string_vp_vbo);
@@ -318,7 +320,6 @@ fn main() {
 
     let (sp, sp_text_color_loc) = create_shaders(&mut context);
 
-    // textures
     let tex = create_texture(ATLAS_IMAGE);
 
     unsafe {
@@ -333,18 +334,16 @@ fn main() {
         gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
     }
 
-    // start main rendering loop
+    // The main rendering loop.
     while !context.gl.window.should_close() {
         unsafe {
-            // wipe the drawing surface clear
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
-            // draw
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
             gl::UseProgram(sp);
 
-            /* Draw text with no depth test and alpha blending */
+            // Draw text with no depth test and alpha blending.
             gl::Disable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
 
@@ -357,7 +356,6 @@ fn main() {
             gl::DrawArrays(gl::TRIANGLES, 0, second_string_points as GLint);
         }
 
-        // update other events like input handling
         context.gl.glfw.poll_events();
         match context.gl.window.get_key(Key::Escape) {
             Action::Press | Action::Repeat => {
