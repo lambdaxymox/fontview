@@ -43,19 +43,6 @@ const ATLAS_ROWS: usize = 16;
 struct GameContext {
     gl: glh::GLState,
 }
-/*
-///
-/// A `FontAtlas` is a bitmapped font sheet.
-///
-struct FontAtlas {
-    rows: usize,
-    columns: usize,
-    glyph_y_offsets: HashMap<char, f32>,
-    glyph_widths: HashMap<char, f32>,
-    glyph_coords: HashMap<char, font_atlas::Address>,
-    buffer: TexImage2D,
-}
-*/
 
 ///
 /// Load the bitmap font atlas file.
