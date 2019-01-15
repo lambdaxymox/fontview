@@ -139,10 +139,12 @@ fn text_to_vbo(
 }
 
 fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
-    let sp = glh::create_program_from_files(
+    let mut vert_reader = io::Cursor::new(include_str!("../shaders/fontview.vert.glsl"));
+    let mut frag_reader = io::Cursor::new(include_str!("../shaders/fontview.frag.glsl"));
+    let sp = glh::create_program_from_reader(
         &context.gl,
-        include_str!("../shaders/fontview.vert.glsl"),
-        include_str!("../shaders/fontview.frag.glsl")
+        &mut vert_reader, "fontview.vert.glsl",
+        &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
     assert!(sp > 0);
 
