@@ -165,7 +165,6 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as GLint);
     }
 
-
     let mut max_aniso = 0.0;
     unsafe {
         gl::GetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_aniso);
@@ -297,9 +296,6 @@ fn main() {
     let tex = load_font_texture(&font_atlas, gl::CLAMP_TO_EDGE).unwrap();;
 
     unsafe {
-        // Rendering defaults.
-        // gl::DepthFunc(gl::LESS); // set depth function
-        // gl::Enable(gl::DEPTH_TEST);
         gl::CullFace(gl::BACK);
         gl::FrontFace(gl::CCW);
         gl::Enable(gl::CULL_FACE);
