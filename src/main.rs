@@ -35,9 +35,6 @@ const GL_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FE;
 const GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FF;
 
 const ATLAS_PATH: &str = "freemono.bmfa";
-// size of atlas. my handmade image is 16x16 glyphs
-const ATLAS_COLS: usize = 16;
-const ATLAS_ROWS: usize = 16;
 
 
 struct GameContext {
