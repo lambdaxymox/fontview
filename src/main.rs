@@ -22,6 +22,7 @@ use crate::texture::TexImage2D;
 use glfw::{Action, Context, Key};
 use std::collections::HashMap;
 use std::fs::File;
+use std::io;
 use std::io::{BufReader, BufRead};
 use std::mem;
 use std::path::Path;
@@ -33,8 +34,7 @@ use std::ptr;
 const GL_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FE;
 const GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FF;
 
-const ATLAS_IMAGE: &str = "freemono.png";
-const ATLAS_META: &str = "freemono.meta";
+const ATLAS_PATH: &str = "freemono.bmfa";
 // size of atlas. my handmade image is 16x16 glyphs
 const ATLAS_COLS: usize = 16;
 const ATLAS_ROWS: usize = 16;
@@ -78,15 +78,20 @@ fn text_to_vbo(
     let at_y = start_y;
 
     for (i, ch_i) in st.chars().enumerate() {
-        let address = atlas.glyph_coords[&ch_i];
-        
-        let s = (address.column as f32) * (1.0 / (atlas.columns as f32));
-        let t = ((address.row + 1) as f32) * (1.0 / (atlas.rows as f32));
+        //let address = atlas.glyph_coords[&ch_i];
+        let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
+
+        // Work out the row and column in the atlas.
+        let atlas_col = (metadata_i.code_point - ' ' as usize) % atlas.columns;
+        let atlas_row = (metadata_i.code_point - ' ' as usize) / atlas.rows;
+
+        let s = (atlas_col as f32) * (1.0 / (atlas.columns as f32));
+        let t = ((atlas_row + 1) as f32) * (1.0 / (atlas.rows as f32));
 
         let x_pos = at_x;
-        let y_pos = at_y - (scale_px / (context.height as f32)) * atlas.glyph_y_offsets[&ch_i];
+        let y_pos = at_y - (scale_px / (context.height as f32)) * metadata_i.y_offset;
 
-        at_x +=  atlas.glyph_widths[&ch_i] * (scale_px / (context.width as f32));
+        at_x +=  metadata_i.width * (scale_px / (context.width as f32));
 
         points_temp[12 * i]     = x_pos;
         points_temp[12 * i + 1] = y_pos;
@@ -181,6 +186,43 @@ fn load_texture(tex_data: &TexImage2D, wrapping_mode: GLuint) -> Result<GLuint, 
     Ok(tex)
 }
 
+///
+/// Load texture image into the GPU.
+///
+fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Result<GLuint, String> {
+    let mut tex = 0;
+    unsafe {
+        gl::GenTextures(1, &mut tex);
+    }
+    assert!(tex > 0);
+
+    unsafe {
+        gl::ActiveTexture(gl::TEXTURE0);
+        gl::BindTexture(gl::TEXTURE_2D, tex);
+        gl::TexImage2D(
+            gl::TEXTURE_2D, 0, gl::RGBA as i32, atlas.dimensions as i32, atlas.dimensions as i32, 0,
+            gl::RGBA, gl::UNSIGNED_BYTE,
+            atlas.image.as_ptr() as *const GLvoid
+        );
+        gl::GenerateMipmap(gl::TEXTURE_2D);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, wrapping_mode as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, wrapping_mode as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_LINEAR as GLint);
+    }
+
+
+    let mut max_aniso = 0.0;
+    unsafe {
+        gl::GetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &mut max_aniso);
+        // Set the maximum!
+        gl::TexParameterf(gl::TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max_aniso);
+    }
+
+    Ok(tex)
+}
+
+
 fn create_texture<P: AsRef<Path>>(file_path: P) -> GLuint {
     let tex_image = texture::load_file(file_path).unwrap();
     let tex = load_texture(&tex_image, gl::CLAMP_TO_EDGE).unwrap();
@@ -229,7 +271,7 @@ fn main() {
     println!("OpenGL version supported {}", version);
 
     // Load the font atlas.
-    let font_atlas = load_font_atlas(ATLAS_IMAGE, ATLAS_META);
+    let font_atlas = load_font_atlas(ATLAS_PATH);
 
     // Set a string of text for lower-case letters.
     let mut first_string_vp_vbo = 0;
@@ -306,7 +348,7 @@ fn main() {
 
     let (sp, sp_text_color_loc) = create_shaders(&mut context);
 
-    let tex = create_texture(ATLAS_IMAGE);
+    let tex = load_font_texture(&font_atlas, gl::CLAMP_TO_EDGE).unwrap();;
 
     unsafe {
         // Rendering defaults.
