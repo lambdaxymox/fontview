@@ -34,7 +34,7 @@ use std::ptr;
 const GL_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FE;
 const GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FF;
 
-const ATLAS_PATH: &str = "freemono.bmfa";
+const ATLAS_PATH: &str = "assets/freemono.bmfa";
 
 
 struct GameContext {
