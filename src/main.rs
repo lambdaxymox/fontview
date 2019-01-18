@@ -315,6 +315,8 @@ fn main() {
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+            gl::ClearColor(0.2, 0.2, 0.6, 1.0);
+            gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
