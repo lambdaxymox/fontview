@@ -10,8 +10,9 @@ keywords = ["games", "game development", "fonts", "graphics"]
 [dependencies]
 glfw = "0.25.0"
 log = "0.4.6"
-simple_cgmath = { git = "https://github.com/stallmanifold/simple-cgmath" }
 stb_image = "0.2.2"
+structopt = "0.2"
+simple_cgmath = { git = "https://github.com/stallmanifold/simple-cgmath" }
 bmfa = { git = "https://github.com/stallmanifold/bmfa" }
 
 [build-dependencies]

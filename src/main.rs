@@ -3,6 +3,7 @@ extern crate glfw;
 extern crate log;
 extern crate stb_image;
 extern crate bmfa;
+extern crate structopt;
 
 mod gl {
     include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
@@ -20,12 +21,14 @@ use crate::gl_help as glh;
 use crate::texture::TexImage2D;
 
 use glfw::{Action, Context, Key};
+use std::fmt;
 use std::fs::File;
 use std::io;
 use std::mem;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process;
 use std::ptr;
+use structopt::StructOpt;
 
 
 // OpenGL extension constants.
@@ -33,6 +36,14 @@ const GL_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FE;
 const GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FF;
 
 const ATLAS_PATH: &str = "assets/freemono.bmfa";
+
+const DEFAULT_TEXT: &str = "\
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor \
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis \
+nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. \
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu \
+fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in \
+culpa qui officia deserunt mollit anim id est laborum.";
 
 
 struct GameContext {
@@ -175,15 +186,54 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 }
 
 ///
-/// The GLFW frame buffer size callback function. This is normally set using 
+/// The GLFW frame buffer size callback function. This is normally set using
 /// the GLFW `glfwSetFramebufferSizeCallback` function, but instead we explicitly
-/// handle window resizing in our state updates on the application side. Run this function 
+/// handle window resizing in our state updates on the application side. Run this function
 /// whenever the size of the viewport changes.
 ///
 #[inline]
 fn glfw_framebuffer_size_callback(context: &mut GameContext, width: u32, height: u32) {
     context.gl.width = width;
     context.gl.height = height;
+}
+
+#[derive(Clone, Debug)]
+enum OptError {
+    InputFileDoesNotExist(PathBuf),
+}
+
+impl fmt::Display for OptError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            OptError::InputFileDoesNotExist(ref path) => {
+                write!(f, "The font file {} could not be found.", path.display())
+            }
+        }
+    }
+}
+
+///
+/// The shell input options for `fontview`.
+///
+#[derive(Debug, StructOpt)]
+#[structopt(name = "fontview")]
+#[structopt(about = "A shell utility for view bitmapped font atlas files.")]
+struct Opt {
+    /// The path to the input file.
+    #[structopt(parse(from_os_str))]
+    #[structopt(short = "i", long = "input")]
+    input_path: PathBuf,
+}
+
+///
+/// Verify the input options.
+///
+fn verify_opt(opt: &Opt) -> Result<(), OptError> {
+    if !(opt.input_path.exists() && opt.input_path.is_file()) {
+        return Err(OptError::InputFileDoesNotExist(opt.input_path.clone()));
+    }
+
+    Ok(())
 }
 
 fn init_app() -> GameContext {
@@ -204,6 +254,8 @@ fn init_app() -> GameContext {
 }
 
 fn main() {
+    // Parse the shell arguments.
+    let opt = Opt::from_args();
     // Start GL context with helper libraries.
     let mut context = init_app();
 
@@ -271,7 +323,7 @@ fn main() {
     let x_pos = -1.0;
     let y_pos = 1.0;
     let pixel_scale = 70.0;
-    let second_str = "The human torch was denied a bank loan!";
+    let second_str = DEFAULT_TEXT;
     let mut second_string_points = 0;
     text_to_vbo(
         &context.gl, second_str, &font_atlas,
