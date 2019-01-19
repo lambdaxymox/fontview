@@ -183,7 +183,7 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 
 ///
 /// The GLFW frame buffer size callback function. This is normally set using
-/// the GLFW `glfwSetFramebufferSizeCallback` function, but instead we explicitly
+/// the GLFW `glfwSetFramebufferSizeCallback` function; instead we explicitly
 /// handle window resizing in our state updates on the application side. Run this function
 /// whenever the size of the viewport changes.
 ///
