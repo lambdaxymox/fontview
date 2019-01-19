@@ -269,43 +269,6 @@ fn main() {
     // Load the font atlas.
     let font_atlas = load_font_atlas(ATLAS_PATH);
 
-    // Set a string of text for lower-case letters.
-    let mut first_string_vp_vbo = 0;
-    unsafe { 
-        gl::GenBuffers(1, &mut first_string_vp_vbo);
-    }
-    assert!(first_string_vp_vbo > 0);
-    
-    let mut first_string_vt_vbo = 0;
-    unsafe { 
-        gl::GenBuffers(1, &mut first_string_vt_vbo);
-    }
-    assert!(first_string_vt_vbo > 0);
-
-    let mut first_string_vao = 0;
-
-    let x_pos: f32 = -0.90;
-    let y_pos: f32 = 0.2;
-    let pixel_scale = 74.0;
-    let first_str = "The Human Torch was denied a bank loan!";
-    let mut first_string_points = 0;
-    text_to_vbo(
-        &context.gl, first_str, &font_atlas, 
-        x_pos, y_pos, pixel_scale,
-        &mut first_string_vp_vbo, &mut first_string_vt_vbo, &mut first_string_points
-    );
-    
-    unsafe {
-        gl::GenVertexArrays(1, &mut first_string_vao);
-        gl::BindVertexArray(first_string_vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, first_string_vp_vbo);
-        gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
-        gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, first_string_vt_vbo);
-        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
-        gl::EnableVertexAttribArray(1);
-    }
-
     // Second string of text for capital letters.
     let mut second_string_vp_vbo = 0;
     unsafe {
@@ -376,10 +339,6 @@ fn main() {
             // Draw text with no depth test and alpha blending.
             gl::Disable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
-
-            gl::BindVertexArray(first_string_vao);
-            gl::Uniform4f(sp_text_color_loc, 1.0, 0.0, 1.0, 1.0 );
-            gl::DrawArrays(gl::TRIANGLES, 0, first_string_points as GLint);
 
             gl::BindVertexArray(second_string_vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
