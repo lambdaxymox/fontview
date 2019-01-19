@@ -155,7 +155,7 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
         gl::ActiveTexture(gl::TEXTURE0);
         gl::BindTexture(gl::TEXTURE_2D, tex);
         gl::TexImage2D(
-            gl::TEXTURE_2D, 0, gl::RGBA as i32, atlas.dimensions as i32, atlas.dimensions as i32, 0,
+            gl::TEXTURE_2D, 0, gl::RGBA as i32, atlas.width as i32, atlas.height as i32, 0,
             gl::RGBA, gl::UNSIGNED_BYTE,
             atlas.image.as_ptr() as *const GLvoid
         );
