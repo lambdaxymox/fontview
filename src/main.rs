@@ -62,12 +62,13 @@ fn text_to_vbo(
     let at_y = start_y;
 
     for (i, ch_i) in st.chars().enumerate() {
-        //let address = atlas.glyph_coords[&ch_i];
         let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
 
         // Work out the row and column in the atlas.
-        let atlas_col = (metadata_i.code_point - ' ' as usize) % atlas.columns;
-        let atlas_row = (metadata_i.code_point - ' ' as usize) / atlas.rows;
+        //let atlas_col = (metadata_i.code_point - ' ' as usize) % atlas.columns;
+        //let atlas_row = (metadata_i.code_point - ' ' as usize) / atlas.rows;
+        let atlas_col = metadata_i.column;
+        let atlas_row = metadata_i.row;
 
         let s = (atlas_col as f32) * (1.0 / (atlas.columns as f32));
         let t = ((atlas_row + 1) as f32) * (1.0 / (atlas.rows as f32));
