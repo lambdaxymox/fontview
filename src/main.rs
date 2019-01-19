@@ -234,10 +234,10 @@ fn main() {
 
     let mut first_string_vao = 0;
 
-    let x_pos: f32 = -0.75;
+    let x_pos: f32 = -0.90;
     let y_pos: f32 = 0.2;
-    let pixel_scale = 190.0;
-    let first_str = "abcdefghijklmnopqrstuvwxyz";
+    let pixel_scale = 74.0;
+    let first_str = "The Human Torch was denied a bank loan!";
     let mut first_string_points = 0;
     text_to_vbo(
         &context.gl, first_str, &font_atlas, 
