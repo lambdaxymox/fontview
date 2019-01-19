@@ -1,4 +1,3 @@
-extern crate cgmath;
 extern crate glfw;
 extern crate log;
 extern crate stb_image;
