@@ -20,10 +20,8 @@ use crate::gl_help as glh;
 use crate::texture::TexImage2D;
 
 use glfw::{Action, Context, Key};
-use std::collections::HashMap;
 use std::fs::File;
 use std::io;
-use std::io::{BufReader, BufRead};
 use std::mem;
 use std::path::Path;
 use std::process;
