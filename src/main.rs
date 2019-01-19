@@ -270,37 +270,37 @@ fn main() {
     let font_atlas = load_font_atlas(ATLAS_PATH);
 
     // Second string of text for capital letters.
-    let mut second_string_vp_vbo = 0;
+    let mut string_vp_vbo = 0;
     unsafe {
-        gl::GenBuffers(1, &mut second_string_vp_vbo);
+        gl::GenBuffers(1, &mut string_vp_vbo);
     }
-    assert!(second_string_vp_vbo > 0);
+    assert!(string_vp_vbo > 0);
 
-    let mut second_string_vt_vbo = 0;
+    let mut string_vt_vbo = 0;
     unsafe {
-        gl::GenBuffers(1, &mut second_string_vt_vbo);
+        gl::GenBuffers(1, &mut string_vt_vbo);
     }
-    assert!(second_string_vt_vbo > 0);
+    assert!(string_vt_vbo > 0);
     
-    let mut second_string_vao = 0;
+    let mut string_vao = 0;
     let x_pos = -1.0;
     let y_pos = 1.0;
     let pixel_scale = 70.0;
     let second_str = DEFAULT_TEXT;
-    let mut second_string_points = 0;
+    let mut string_points = 0;
     text_to_vbo(
         &context.gl, second_str, &font_atlas,
         x_pos, y_pos, pixel_scale, 
-        &mut second_string_vp_vbo, &mut second_string_vt_vbo, &mut second_string_points
+        &mut string_vp_vbo, &mut string_vt_vbo, &mut string_points
     );
     
     unsafe {
-        gl::GenVertexArrays(1, &mut second_string_vao);
-        gl::BindVertexArray(second_string_vao );
-        gl::BindBuffer(gl::ARRAY_BUFFER, second_string_vp_vbo);
+        gl::GenVertexArrays(1, &mut string_vao);
+        gl::BindVertexArray(string_vao);
+        gl::BindBuffer(gl::ARRAY_BUFFER, string_vp_vbo);
         gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, second_string_vt_vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, string_vt_vbo);
         gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(1);
     }
@@ -340,9 +340,9 @@ fn main() {
             gl::Disable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
 
-            gl::BindVertexArray(second_string_vao);
+            gl::BindVertexArray(string_vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
-            gl::DrawArrays(gl::TRIANGLES, 0, second_string_points as GLint);
+            gl::DrawArrays(gl::TRIANGLES, 0, string_points as GLint);
         }
 
         context.gl.glfw.poll_events();
