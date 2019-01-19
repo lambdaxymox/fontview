@@ -10,7 +10,6 @@ mod gl {
 }
 
 mod gl_help;
-mod texture;
 
 
 use crate::gl::types::{
@@ -18,7 +17,6 @@ use crate::gl::types::{
 };
 
 use crate::gl_help as glh;
-use crate::texture::TexImage2D;
 
 use glfw::{Action, Context, Key};
 use std::fmt;
