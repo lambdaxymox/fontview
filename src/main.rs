@@ -256,6 +256,14 @@ fn init_app() -> GameContext {
 fn main() {
     // Parse the shell arguments.
     let opt = Opt::from_args();
+    match verify_opt(&opt) {
+        Err(e) => {
+            eprintln!("Error: {:?}", e);
+            process::exit(1);
+        }
+        Ok(_) => {}
+    }
+
     // Start GL context with helper libraries.
     let mut context = init_app();
 
