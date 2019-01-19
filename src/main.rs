@@ -19,7 +19,6 @@ use crate::gl_help as glh;
 
 use glfw::{Action, Context, Key};
 use std::fmt;
-use std::fs::File;
 use std::io;
 use std::mem;
 use std::path::{Path, PathBuf};
@@ -243,7 +242,7 @@ fn init_app() -> GameContext {
         }
     };
 
-    let mut context = GameContext {
+    let context = GameContext {
         gl: gl_state,
     };
 
