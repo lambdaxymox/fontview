@@ -24,6 +24,7 @@ use std::mem;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::ptr;
+use std::rc::Rc;
 use structopt::StructOpt;
 
 
@@ -126,6 +127,40 @@ fn text_to_vbo(
     }
 
     *point_count = 6 * st.len();
+}
+
+struct TextWriter {
+    writer: GLTextWriter,
+}
+
+impl fmt::Write for TextWriter {
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        self.writer.write_str(s)
+    }
+}
+
+struct GLTextWriter {
+    context: Rc<glh::GLState>,
+    atlas: Rc<bmfa::BitmapFontAtlas>,
+    start_at_x: f32,
+    start_at_y: f32,
+    scale_px: f32,
+    vp_vbo: GLuint,
+    vt_vbo: GLuint,
+    points: GLuint,
+    pixel_scale: f32,
+}
+
+impl fmt::Write for GLTextWriter {
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        let mut point_count = 0;
+        text_to_vbo(
+            &self.context, s, &self.atlas,
+            self.start_at_x, self.start_at_y, self.scale_px,
+            &mut self.vp_vbo, &mut self.vt_vbo, &mut point_count);
+
+        Ok(())
+    }
 }
 
 fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
@@ -288,7 +323,7 @@ fn main() {
     
     let mut string_vao = 0;
     let x_pos = -1.0;
-    let y_pos = 1.0;
+    let y_pos = 0.95;
     let pixel_scale = 70.0;
     let second_str = DEFAULT_TEXT;
     let mut string_points = 0;
