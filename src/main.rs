@@ -129,6 +129,14 @@ struct TextWriter {
     writer: GLTextWriter,
 }
 
+impl TextWriter {
+    fn new(writer: GLTextWriter) -> TextWriter {
+        TextWriter {
+            writer: writer,
+        }
+    }
+}
+
 impl fmt::Write for TextWriter {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
         self.writer.write_str(s)
@@ -143,6 +151,18 @@ struct GLTextWriter {
     scale_px: f32,
     points_vbo: GLuint,
     texcoords_vbo: GLuint,
+}
+
+impl GLTextWriter {
+    fn new(
+        context: Rc<glh::GLState>, atlas: Rc<bmfa::BitmapFontAtlas>,
+        start_at_x: f32, start_at_y: f32, scale_px: f32,
+        points_vbo: GLuint, texcoords_vbo: GLuint) -> GLTextWriter {
+
+        GLTextWriter {
+            context, atlas, start_at_x, start_at_y, scale_px, points_vbo, texcoords_vbo
+        }
+    }
 }
 
 impl fmt::Write for GLTextWriter {
