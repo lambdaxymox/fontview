@@ -195,7 +195,7 @@ fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
-        &context.gl.borrow(),
+        &context.gl(),
         &mut vert_reader, "fontview.vert.glsl",
         &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
