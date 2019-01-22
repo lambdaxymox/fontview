@@ -125,6 +125,39 @@ fn text_to_vbo(
     *point_count = 6 * st.len();
 }
 
+struct TextWriter {
+    writer: GLTextWriter,
+}
+
+impl fmt::Write for TextWriter {
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        self.writer.write_str(s)
+    }
+}
+
+struct GLTextWriter {
+    context: Rc<glh::GLState>,
+    atlas: Rc<bmfa::BitmapFontAtlas>,
+    start_at_x: f32,
+    start_at_y: f32,
+    scale_px: f32,
+    points_vbo: GLuint,
+    texcoords_vbo: GLuint,
+}
+
+impl fmt::Write for GLTextWriter {
+    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
+        let mut point_count = 0;
+        text_to_vbo(
+            &self.context, s, &self.atlas,
+            self.start_at_x, self.start_at_y, self.scale_px,
+            &mut self.points_vbo, &mut self.texcoords_vbo, &mut point_count
+        );
+
+        Ok(())
+    }
+}
+
 fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/fontview.frag.glsl"));
