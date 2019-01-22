@@ -355,7 +355,7 @@ fn main() {
     let second_str = DEFAULT_TEXT;
     let mut string_points = 0;
     text_to_vbo(
-        &context.gl.borrow(), second_str, &font_atlas,
+        &context.gl(), second_str, &font_atlas,
         x_pos, y_pos, pixel_scale, 
         &mut string_vp_vbo, &mut string_vt_vbo, &mut string_points
     );
@@ -383,7 +383,7 @@ fn main() {
         // Partial transparency.
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-        gl::Viewport(0, 0, context.gl.borrow().width as i32, context.gl.borrow().height as i32);
+        gl::Viewport(0, 0, context.gl().width as i32, context.gl().height as i32);
     }
 
     // The main rendering loop.
