@@ -18,6 +18,7 @@ use crate::gl::types::{
 use crate::gl_help as glh;
 
 use glfw::{Action, Context, Key};
+use std::cell::{Ref, RefMut, RefCell};
 use std::fmt;
 use std::io;
 use std::mem;
@@ -44,7 +45,17 @@ culpa qui officia deserunt mollit anim id est laborum.";
 
 
 struct GameContext {
-    gl: glh::GLState,
+    gl: Rc<RefCell<glh::GLState>>,
+}
+
+impl GameContext {
+    fn gl(&self) -> Ref<glh::GLState> {
+        self.gl.borrow()
+    }
+
+    fn gl_mut(&self) -> RefMut<glh::GLState> {
+        self.gl.borrow_mut()
+    }
 }
 
 ///
@@ -144,7 +155,7 @@ impl fmt::Write for TextWriter {
 }
 
 struct GLTextWriter {
-    context: Rc<glh::GLState>,
+    context: Rc<RefCell<glh::GLState>>,
     atlas: Rc<bmfa::BitmapFontAtlas>,
     start_at_x: f32,
     start_at_y: f32,
@@ -155,7 +166,7 @@ struct GLTextWriter {
 
 impl GLTextWriter {
     fn new(
-        context: Rc<glh::GLState>, atlas: Rc<bmfa::BitmapFontAtlas>,
+        context: Rc<RefCell<glh::GLState>>, atlas: Rc<bmfa::BitmapFontAtlas>,
         start_at_x: f32, start_at_y: f32, scale_px: f32,
         points_vbo: GLuint, texcoords_vbo: GLuint) -> GLTextWriter {
 
@@ -169,7 +180,7 @@ impl fmt::Write for GLTextWriter {
     fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
         let mut point_count = 0;
         text_to_vbo(
-            &self.context, s, &self.atlas,
+            &self.context.borrow(), s, &self.atlas,
             self.start_at_x, self.start_at_y, self.scale_px,
             &mut self.points_vbo, &mut self.texcoords_vbo, &mut point_count
         );
@@ -182,7 +193,7 @@ fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
-        &context.gl,
+        &context.gl.borrow(),
         &mut vert_reader, "fontview.vert.glsl",
         &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
@@ -239,8 +250,9 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 ///
 #[inline]
 fn glfw_framebuffer_size_callback(context: &mut GameContext, width: u32, height: u32) {
-    context.gl.width = width;
-    context.gl.height = height;
+    let mut borrow = context.gl.borrow_mut();
+    borrow.width = width;
+    borrow.height = height;
 }
 
 #[derive(Clone, Debug)]
@@ -293,7 +305,7 @@ fn init_app() -> GameContext {
     };
 
     let context = GameContext {
-        gl: gl_state,
+        gl: Rc::new(RefCell::new(gl_state)),
     };
 
     context
@@ -335,7 +347,8 @@ fn main() {
         gl::GenBuffers(1, &mut string_vt_vbo);
     }
     assert!(string_vt_vbo > 0);
-    
+
+    /* ***** BEGIN RENDER TEXT TO THE SCREEN ******/
     let mut string_vao = 0;
     let x_pos = -1.0;
     let y_pos = 0.95;
@@ -343,11 +356,12 @@ fn main() {
     let second_str = DEFAULT_TEXT;
     let mut string_points = 0;
     text_to_vbo(
-        &context.gl, second_str, &font_atlas,
+        &context.gl.borrow(), second_str, &font_atlas,
         x_pos, y_pos, pixel_scale, 
         &mut string_vp_vbo, &mut string_vt_vbo, &mut string_points
     );
-    
+    /* ******* END RENDER TEXT TO THE SCREEN ****** */
+
     unsafe {
         gl::GenVertexArrays(1, &mut string_vao);
         gl::BindVertexArray(string_vao);
@@ -370,21 +384,21 @@ fn main() {
         // Partial transparency.
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-        gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
+        gl::Viewport(0, 0, context.gl.borrow().width as i32, context.gl.borrow().height as i32);
     }
 
     // The main rendering loop.
-    while !context.gl.window.should_close() {
+    while !context.gl().window.should_close() {
         // Check for whether the window size has changed.
-        let (width, height) = context.gl.window.get_framebuffer_size();
-        if (width != context.gl.width as i32) && (height != context.gl.height as i32) {
+        let (width, height) = context.gl().window.get_framebuffer_size();
+        if (width != context.gl().width as i32) && (height != context.gl().height as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
         }
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-            gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
+            gl::Viewport(0, 0, context.gl().width as i32, context.gl().height as i32);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
@@ -399,15 +413,15 @@ fn main() {
             gl::DrawArrays(gl::TRIANGLES, 0, string_points as GLint);
         }
 
-        context.gl.glfw.poll_events();
-        match context.gl.window.get_key(Key::Escape) {
+        context.gl_mut().glfw.poll_events();
+        match context.gl().window.get_key(Key::Escape) {
             Action::Press | Action::Repeat => {
-                context.gl.window.set_should_close(true);
+                context.gl_mut().window.set_should_close(true);
             }
             _ => {}
         }
         
         // Send the results to the output.
-        context.gl.window.swap_buffers();
+        context.gl_mut().window.swap_buffers();
     }
 }
