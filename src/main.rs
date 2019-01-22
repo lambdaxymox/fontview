@@ -250,9 +250,8 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 ///
 #[inline]
 fn glfw_framebuffer_size_callback(context: &mut GameContext, width: u32, height: u32) {
-    let mut borrow = context.gl.borrow_mut();
-    borrow.width = width;
-    borrow.height = height;
+    context.gl_mut().width = width;
+    context.gl_mut().height = height;
 }
 
 #[derive(Clone, Debug)]
