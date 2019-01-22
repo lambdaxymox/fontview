@@ -49,10 +49,12 @@ struct GameContext {
 }
 
 impl GameContext {
+    #[inline]
     fn gl(&self) -> Ref<glh::GLState> {
         self.gl.borrow()
     }
 
+    #[inline]
     fn gl_mut(&self) -> RefMut<glh::GLState> {
         self.gl.borrow_mut()
     }
