@@ -184,7 +184,8 @@ impl GLTextWriter {
     }
 
     fn write(&mut self, points: &[GLfloat], texcoords: &[GLfloat]) -> io::Result<usize> {
-        eprintln!("In GLTextwriter.");
+        eprintln!("{}", points.len());
+        eprintln!("{}", texcoords.len());
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.points_vbo);
             gl::BufferData(
@@ -199,7 +200,7 @@ impl GLTextWriter {
         }
 
         let bytes_written = mem::size_of::<GLfloat>() * (points.len() + texcoords.len());
-
+        eprintln!("{}", bytes_written);
         Ok(bytes_written)
     }
 }
@@ -390,8 +391,8 @@ fn main() {
         string_vt_vbo) = create_text_writer(&mut context, atlas.clone());
 
     // Write out the lorem ipsum text.
-    let second_str = DEFAULT_TEXT;
-    write!(writer, "{}", second_str).unwrap();
+    let string = DEFAULT_TEXT;
+    write!(writer, "{}", string).unwrap();
 
     unsafe {
         gl::BindVertexArray(string_vao);
