@@ -19,7 +19,6 @@ use crate::gl_help as glh;
 
 use glfw::{Action, Context, Key};
 use std::cell::{Ref, RefMut, RefCell};
-use std::error;
 use std::fmt;
 use std::io;
 use std::io::Write;
