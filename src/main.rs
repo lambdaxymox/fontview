@@ -200,7 +200,7 @@ impl GLTextWriter {
         }
 
         let bytes_written = mem::size_of::<GLfloat>() * (points.len() + texcoords.len());
-        eprintln!("{}", bytes_written);
+
         Ok(bytes_written)
     }
 }
@@ -393,7 +393,7 @@ fn main() {
     // Write out the lorem ipsum text.
     let string = DEFAULT_TEXT;
     write!(writer, "{}", string).unwrap();
-    eprintln!("Wrote out text to GPU.");
+
     unsafe {
         gl::BindVertexArray(string_vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, string_vp_vbo);
