@@ -272,6 +272,40 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
     Ok(tex)
 }
 
+fn create_text_writer(
+    context: &mut GameContext,
+    atlas: Rc<bmfa::BitmapFontAtlas>) -> (TextWriter, GLuint, GLuint, GLuint) {
+
+    let mut string_vp_vbo = 0;
+    unsafe {
+        gl::GenBuffers(1, &mut string_vp_vbo);
+    }
+    assert!(string_vp_vbo > 0);
+
+    let mut string_vt_vbo = 0;
+    unsafe {
+        gl::GenBuffers(1, &mut string_vt_vbo);
+    }
+    assert!(string_vt_vbo > 0);
+
+    let mut string_vao = 0;
+    unsafe {
+        gl::GenVertexArrays(1, &mut string_vao);
+    }
+    assert!(string_vao > 0);
+
+    let start_at_x = -0.95;
+    let start_at_y = 0.95;
+    let scale_px = 64.0;
+    let gl_writer = GLTextWriter::new(
+        context.gl.clone(), atlas.clone(),
+        start_at_x, start_at_y, scale_px, string_vp_vbo, string_vt_vbo
+    );
+    let writer = TextWriter::new(gl_writer);
+
+    (writer, string_vao, string_vp_vbo, string_vt_vbo)
+}
+
 ///
 /// The GLFW frame buffer size callback function. This is normally set using
 /// the GLFW `glfwSetFramebufferSizeCallback` function; instead we explicitly
@@ -364,35 +398,17 @@ fn main() {
     // Load the font atlas.
     let atlas = load_font_atlas(ATLAS_PATH);
 
-    /* ****** BEGIN WRITING DATA TO THE SCREEN ***** */
-    // Second string of text for capital letters.
-    let mut string_vp_vbo = 0;
-    unsafe {
-        gl::GenBuffers(1, &mut string_vp_vbo);
-    }
-    assert!(string_vp_vbo > 0);
+    // Create the text writer.
+    let (
+        mut writer,
+        string_vao,
+        string_vp_vbo,
+        string_vt_vbo) = create_text_writer(&mut context, atlas.clone());
 
-    let mut string_vt_vbo = 0;
-    unsafe {
-        gl::GenBuffers(1, &mut string_vt_vbo);
-    }
-    assert!(string_vt_vbo > 0);
-
-    let mut string_vao = 0;
-    unsafe {
-        gl::GenVertexArrays(1, &mut string_vao);
-    }
-    assert!(string_vao > 0);
-
-    let start_at_x = -1.0;
-    let start_at_y = 0.95;
-    let scale_px = 70.0;
-    let gl_writer = GLTextWriter::new(context.gl.clone(), atlas.clone(), start_at_x, start_at_y, scale_px, string_vp_vbo, string_vt_vbo);
-    let mut writer = TextWriter::new(gl_writer);
+    // Write out the lorem ipsum text.
     let second_str = DEFAULT_TEXT;
     write!(writer, "{}", second_str).unwrap();
 
-    /* ******* END WRITING TEXT TO THE SCREEN ***** */
     unsafe {
         gl::BindVertexArray(string_vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, string_vp_vbo);
