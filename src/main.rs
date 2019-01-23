@@ -75,6 +75,36 @@ impl GameContext {
     fn height(&self) -> u32 {
         self.gl.borrow().height
     }
+
+    #[inline]
+    fn poll_events(&mut self) {
+        self.gl.borrow_mut().glfw.poll_events();
+    }
+
+    #[inline]
+    fn swap_buffers(&mut self) {
+        self.gl.borrow_mut().window.swap_buffers();
+    }
+
+    #[inline]
+    fn get_framebuffer_size(&mut self) -> (i32, i32) {
+        self.gl.borrow_mut().window.get_framebuffer_size()
+    }
+
+    #[inline]
+    fn window_should_close(&self) -> bool {
+        self.gl.borrow().window.should_close()
+    }
+
+    #[inline]
+    fn window_set_should_close(&mut self, close: bool) {
+        self.gl.borrow_mut().window.set_should_close(close);
+    }
+
+    #[inline]
+    fn window_get_key(&self, key: Key) -> Action {
+        self.gl.borrow().window.get_key(key)
+    }
 }
 
 struct TextWriter {
@@ -445,9 +475,9 @@ fn run_app(opt: Opt) -> Result<(), String> {
     }
 
     // The main rendering loop.
-    while !context.gl().window.should_close() {
+    while !context.window_should_close() {
         // Check for whether the window size has changed.
-        let (width, height) = context.gl().window.get_framebuffer_size();
+        let (width, height) = context.get_framebuffer_size();
         if (width != context.width() as i32) && (height != context.height() as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
 
@@ -473,16 +503,16 @@ fn run_app(opt: Opt) -> Result<(), String> {
             gl::DrawArrays(gl::TRIANGLES, 0, writer.point_count() as GLint);
         }
 
-        context.gl_mut().glfw.poll_events();
-        match context.gl().window.get_key(Key::Escape) {
+        context.poll_events();
+        match context.window_get_key(Key::Escape) {
             Action::Press | Action::Repeat => {
-                context.gl_mut().window.set_should_close(true);
+                context.window_set_should_close(true);
             }
             _ => {}
         }
 
         // Send the results to the output.
-        context.gl_mut().window.swap_buffers();
+        context.swap_buffers();
     }
 
     Ok(())
