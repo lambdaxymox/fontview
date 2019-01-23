@@ -71,17 +71,6 @@ fn load_font_atlas<P: AsRef<Path>>(path: P) -> Rc<bmfa::BitmapFontAtlas> {
     Rc::new(atlas)
 }
 
-///
-/// Print a string to the GLFW screen with the given font.
-///
-fn text_to_vbo(
-    context: &glh::GLState, st: &str, atlas: &bmfa::BitmapFontAtlas,
-    start_x: f32, start_y: f32, scale_px: f32,
-    points_vbo: &mut GLuint, texcoords_vbo: &mut GLuint, point_count: &mut usize) -> usize {
-
-    0
-}
-
 struct TextWriter {
     context: Rc<RefCell<glh::GLState>>,
     atlas: Rc<bmfa::BitmapFontAtlas>,
