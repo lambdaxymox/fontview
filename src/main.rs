@@ -375,9 +375,7 @@ fn run_app(opt: Opt) -> Result<(), String> {
     // Start GL context with helper libraries.
     let mut context = init_app();
 
-    // Get renderer string.
     let renderer = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::RENDERER) });
-    // Get version as a string.
     let version = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::VERSION) });
     println!("Renderer: {}", renderer);
     println!("OpenGL version supported {}", version);
