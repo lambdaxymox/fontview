@@ -23,7 +23,7 @@ use std::fmt;
 use std::io;
 use std::io::Write;
 use std::mem;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process;
 use std::ptr;
 use std::rc::Rc;
@@ -65,15 +65,6 @@ impl GameContext {
     fn gl_mut(&self) -> RefMut<glh::GLState> {
         self.gl.borrow_mut()
     }
-}
-
-///
-/// Load the bitmap font atlas file.
-///
-fn load_font_atlas<P: AsRef<Path>>(path: P) -> Rc<bmfa::BitmapFontAtlas> {
-    let atlas = bmfa::load(path).unwrap();
-
-    Rc::new(atlas)
 }
 
 struct TextWriter {
