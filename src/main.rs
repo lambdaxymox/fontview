@@ -384,7 +384,6 @@ fn main() {
     }
     assert!(string_vao > 0);
 
-    /* ***** BEGIN RENDER TEXT TO THE SCREEN ******/
     let start_at_x = -1.0;
     let start_at_y = 0.95;
     let scale_px = 70.0;
@@ -392,15 +391,7 @@ fn main() {
     let mut writer = TextWriter::new(gl_writer);
     let second_str = DEFAULT_TEXT;
     write!(writer, "{}", second_str).unwrap();
-    /*
-    let mut string_points = 0;
-    text_to_vbo(
-        &context.gl(), second_str, &font_atlas,
-        x_pos, y_pos, pixel_scale, 
-        &mut string_vp_vbo, &mut string_vt_vbo, &mut string_points
-    );
-    */
-    /* ******* END RENDER TEXT TO THE SCREEN ****** */
+
     /* ******* END WRITING TEXT TO THE SCREEN ***** */
     unsafe {
         gl::BindVertexArray(string_vao);
