@@ -160,7 +160,9 @@ impl io::Write for TextWriter {
         }
 
         self.point_count = 6 * st.len();
-        self.writer.write(&points, &texcoords)
+        self.writer.write(&points, &texcoords)?;
+
+        Ok(st.len())
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -184,8 +186,6 @@ impl GLTextWriter {
     }
 
     fn write(&mut self, points: &[GLfloat], texcoords: &[GLfloat]) -> io::Result<usize> {
-        eprintln!("{}", points.len());
-        eprintln!("{}", texcoords.len());
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.points_vbo);
             gl::BufferData(
@@ -393,7 +393,7 @@ fn main() {
     // Write out the lorem ipsum text.
     let string = DEFAULT_TEXT;
     write!(writer, "{}", string).unwrap();
-
+    eprintln!("Wrote out text to GPU.");
     unsafe {
         gl::BindVertexArray(string_vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, string_vp_vbo);
