@@ -111,11 +111,13 @@ impl io::Write for TextWriter {
         let scale_px = self.scale_px;
         let height = (*self.context).borrow().height;
         let width = (*self.context).borrow().width;
+        let line_spacing = 0.05;
 
         let mut points = vec![0.0; 12 * st.len()];
         let mut texcoords = vec![0.0; 12 * st.len()];
         let mut at_x = self.start_at_x;
-        let at_y = self.start_at_y;
+        let end_at_x = 0.95;
+        let mut at_y = self.start_at_y;
 
         for (i, ch_i) in st.chars().enumerate() {
             let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
@@ -128,7 +130,11 @@ impl io::Write for TextWriter {
             let x_pos = at_x;
             let y_pos = at_y - (scale_px / (height as f32)) * metadata_i.y_offset;
 
-            at_x +=  metadata_i.width * (scale_px / (width as f32));
+            at_x += metadata_i.width * (scale_px / width as f32);
+            if at_x >= end_at_x {
+                at_x = self.start_at_x;
+                at_y -= line_spacing + metadata_i.height * (scale_px / height as f32);
+            }
 
             points[12 * i]     = x_pos;
             points[12 * i + 1] = y_pos;
@@ -343,7 +349,7 @@ fn verify_opt(opt: &Opt) -> Result<(), OptError> {
 }
 
 fn init_app() -> GameContext {
-    let gl_state = match glh::start_gl(800, 480) {
+    let gl_state = match glh::start_gl(1024, 576) {
         Ok(val) => val,
         Err(e) => {
             eprintln!("Failed to Initialize OpenGL context. Got error:");
