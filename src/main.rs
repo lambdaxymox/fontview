@@ -123,8 +123,8 @@ impl io::Write for TextWriter {
         let height = (*self.context).borrow().height;
         let width = (*self.context).borrow().width;
 
-        let mut points_temp = vec![0.0; 12 * st.len()];
-        let mut texcoords_temp = vec![0.0; 12 * st.len()];
+        let mut points = vec![0.0; 12 * st.len()];
+        let mut texcoords = vec![0.0; 12 * st.len()];
         let mut at_x = self.start_at_x;
         let at_y = self.start_at_y;
 
@@ -141,37 +141,37 @@ impl io::Write for TextWriter {
 
             at_x +=  metadata_i.width * (scale_px / (width as f32));
 
-            points_temp[12 * i]     = x_pos;
-            points_temp[12 * i + 1] = y_pos;
-            points_temp[12 * i + 2] = x_pos;
-            points_temp[12 * i + 3] = y_pos - scale_px / (height as f32);
-            points_temp[12 * i + 4] = x_pos + scale_px / (width as f32);
-            points_temp[12 * i + 5] = y_pos - scale_px / (height as f32);
+            points[12 * i]     = x_pos;
+            points[12 * i + 1] = y_pos;
+            points[12 * i + 2] = x_pos;
+            points[12 * i + 3] = y_pos - scale_px / (height as f32);
+            points[12 * i + 4] = x_pos + scale_px / (width as f32);
+            points[12 * i + 5] = y_pos - scale_px / (height as f32);
 
-            points_temp[12 * i + 6]  = x_pos + scale_px / (width as f32);
-            points_temp[12 * i + 7]  = y_pos - scale_px / (height as f32);
-            points_temp[12 * i + 8]  = x_pos + scale_px / (width as f32);
-            points_temp[12 * i + 9]  = y_pos;
-            points_temp[12 * i + 10] = x_pos;
-            points_temp[12 * i + 11] = y_pos;
+            points[12 * i + 6]  = x_pos + scale_px / (width as f32);
+            points[12 * i + 7]  = y_pos - scale_px / (height as f32);
+            points[12 * i + 8]  = x_pos + scale_px / (width as f32);
+            points[12 * i + 9]  = y_pos;
+            points[12 * i + 10] = x_pos;
+            points[12 * i + 11] = y_pos;
 
-            texcoords_temp[12 * i]     = s;
-            texcoords_temp[12 * i + 1] = 1.0 - t + 1.0 / (atlas.rows as f32);
-            texcoords_temp[12 * i + 2] = s;
-            texcoords_temp[12 * i + 3] = 1.0 - t;
-            texcoords_temp[12 * i + 4] = s + 1.0 / (atlas.columns as f32);
-            texcoords_temp[12 * i + 5] = 1.0 - t;
+            texcoords[12 * i]     = s;
+            texcoords[12 * i + 1] = 1.0 - t + 1.0 / (atlas.rows as f32);
+            texcoords[12 * i + 2] = s;
+            texcoords[12 * i + 3] = 1.0 - t;
+            texcoords[12 * i + 4] = s + 1.0 / (atlas.columns as f32);
+            texcoords[12 * i + 5] = 1.0 - t;
 
-            texcoords_temp[12 * i + 6]  = s + 1.0 / (atlas.columns as f32);
-            texcoords_temp[12 * i + 7]  = 1.0 - t;
-            texcoords_temp[12 * i + 8]  = s + 1.0 / (atlas.columns as f32);
-            texcoords_temp[12 * i + 9]  = 1.0 - t + 1.0 / (atlas.rows as f32);
-            texcoords_temp[12 * i + 10] = s;
-            texcoords_temp[12 * i + 11] = 1.0 - t + 1.0 / (atlas.rows as f32);
+            texcoords[12 * i + 6]  = s + 1.0 / (atlas.columns as f32);
+            texcoords[12 * i + 7]  = 1.0 - t;
+            texcoords[12 * i + 8]  = s + 1.0 / (atlas.columns as f32);
+            texcoords[12 * i + 9]  = 1.0 - t + 1.0 / (atlas.rows as f32);
+            texcoords[12 * i + 10] = s;
+            texcoords[12 * i + 11] = 1.0 - t + 1.0 / (atlas.rows as f32);
         }
 
         self.point_count = 6 * st.len();
-        self.writer.write(&points_temp, &texcoords_temp)
+        self.writer.write(&points, &texcoords)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -195,6 +195,7 @@ impl GLTextWriter {
     }
 
     fn write(&mut self, points: &[GLfloat], texcoords: &[GLfloat]) -> io::Result<usize> {
+        eprintln!("In GLTextwriter.");
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, self.points_vbo);
             gl::BufferData(
