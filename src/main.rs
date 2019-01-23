@@ -21,11 +21,13 @@ use glfw::{Action, Context, Key};
 use std::cell::{Ref, RefMut, RefCell};
 use std::fmt;
 use std::io;
+use std::io::Write;
 use std::mem;
 use std::path::{Path, PathBuf};
 use std::process;
 use std::ptr;
 use std::rc::Rc;
+use std::str;
 use structopt::StructOpt;
 
 
@@ -63,8 +65,10 @@ impl GameContext {
 ///
 /// Load the bitmap font atlas file.
 ///
-fn load_font_atlas<P: AsRef<Path>>(path: P) -> bmfa::BitmapFontAtlas {
-    bmfa::load(path).unwrap()
+fn load_font_atlas<P: AsRef<Path>>(path: P) -> Rc<bmfa::BitmapFontAtlas> {
+    let atlas = bmfa::load(path).unwrap();
+
+    Rc::new(atlas)
 }
 
 ///
@@ -73,7 +77,7 @@ fn load_font_atlas<P: AsRef<Path>>(path: P) -> bmfa::BitmapFontAtlas {
 fn text_to_vbo(
     context: &glh::GLState, st: &str, atlas: &bmfa::BitmapFontAtlas,
     start_x: f32, start_y: f32, scale_px: f32,
-    points_vbo: &mut GLuint, texcoords_vbo: &mut GLuint, point_count: &mut usize) {
+    points_vbo: &mut GLuint, texcoords_vbo: &mut GLuint, point_count: &mut usize) -> usize {
 
     let mut points_temp = vec![0.0; 12 * st.len()];
     let mut texcoords_temp = vec![0.0; 12 * st.len()];
@@ -136,6 +140,8 @@ fn text_to_vbo(
     }
 
     *point_count = 6 * st.len();
+
+    st.len()
 }
 
 struct TextWriter {
@@ -148,11 +154,19 @@ impl TextWriter {
             writer: writer,
         }
     }
+
+    fn point_count(&self) -> usize {
+        self.writer.point_count
+    }
 }
 
-impl fmt::Write for TextWriter {
-    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
-        self.writer.write_str(s)
+impl io::Write for TextWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.writer.write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }
 
@@ -164,29 +178,43 @@ struct GLTextWriter {
     scale_px: f32,
     points_vbo: GLuint,
     texcoords_vbo: GLuint,
+    point_count: usize,
 }
 
 impl GLTextWriter {
     fn new(
-        context: Rc<RefCell<glh::GLState>>, atlas: Rc<bmfa::BitmapFontAtlas>,
+        context: Rc<RefCell<glh::GLState>>,
+        atlas: Rc<bmfa::BitmapFontAtlas>,
         start_at_x: f32, start_at_y: f32, scale_px: f32,
         points_vbo: GLuint, texcoords_vbo: GLuint) -> GLTextWriter {
 
         GLTextWriter {
-            context, atlas, start_at_x, start_at_y, scale_px, points_vbo, texcoords_vbo
+            context: context,
+            atlas: atlas,
+            start_at_x: start_at_x,
+            start_at_y: start_at_y,
+            scale_px: scale_px,
+            points_vbo: points_vbo,
+            texcoords_vbo: texcoords_vbo,
+            point_count: 0
         }
     }
 }
 
-impl fmt::Write for GLTextWriter {
-    fn write_str(&mut self, s: &str) -> Result<(), fmt::Error> {
-        let mut point_count = 0;
-        text_to_vbo(
-            &self.context.borrow(), s, &self.atlas,
+impl io::Write for GLTextWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let st = str::from_utf8(buf).unwrap();
+        self.point_count = 0;
+        let bytes_written = text_to_vbo(
+            &self.context.borrow(), st, &self.atlas,
             self.start_at_x, self.start_at_y, self.scale_px,
-            &mut self.points_vbo, &mut self.texcoords_vbo, &mut point_count
+            &mut self.points_vbo, &mut self.texcoords_vbo, &mut self.point_count
         );
 
+        Ok(bytes_written)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
         Ok(())
     }
 }
@@ -334,8 +362,9 @@ fn main() {
     println!("OpenGL version supported {}", version);
 
     // Load the font atlas.
-    let font_atlas = load_font_atlas(ATLAS_PATH);
+    let atlas = load_font_atlas(ATLAS_PATH);
 
+    /* ****** BEGIN WRITING DATA TO THE SCREEN ***** */
     // Second string of text for capital letters.
     let mut string_vp_vbo = 0;
     unsafe {
@@ -351,17 +380,23 @@ fn main() {
 
     /* ***** BEGIN RENDER TEXT TO THE SCREEN ******/
     let mut string_vao = 0;
-    let x_pos = -1.0;
-    let y_pos = 0.95;
-    let pixel_scale = 70.0;
+    let start_at_x = -1.0;
+    let start_at_y = 0.95;
+    let scale_px = 70.0;
+    let gl_writer = GLTextWriter::new(context.gl.clone(), atlas.clone(), start_at_x, start_at_y, scale_px, string_vp_vbo, string_vt_vbo);
+    let mut writer = TextWriter::new(gl_writer);
     let second_str = DEFAULT_TEXT;
+    write!(writer, "{}", second_str).unwrap();
+    /*
     let mut string_points = 0;
     text_to_vbo(
         &context.gl(), second_str, &font_atlas,
         x_pos, y_pos, pixel_scale, 
         &mut string_vp_vbo, &mut string_vt_vbo, &mut string_points
     );
+    */
     /* ******* END RENDER TEXT TO THE SCREEN ****** */
+    /* ******* END WRITING TEXT TO THE SCREEN ***** */
 
     unsafe {
         gl::GenVertexArrays(1, &mut string_vao);
@@ -376,7 +411,7 @@ fn main() {
 
     let (sp, sp_text_color_loc) = create_shaders(&mut context);
 
-    let tex = load_font_texture(&font_atlas, gl::CLAMP_TO_EDGE).unwrap();;
+    let tex = load_font_texture(&atlas, gl::CLAMP_TO_EDGE).unwrap();;
 
     unsafe {
         gl::CullFace(gl::BACK);
@@ -411,7 +446,7 @@ fn main() {
 
             gl::BindVertexArray(string_vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
-            gl::DrawArrays(gl::TRIANGLES, 0, string_points as GLint);
+            gl::DrawArrays(gl::TRIANGLES, 0, writer.point_count() as GLint);
         }
 
         context.gl_mut().glfw.poll_events();
