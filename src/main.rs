@@ -386,8 +386,7 @@ fn run_app(opt: Opt) -> Result<(), String> {
     let atlas = match bmfa::load(opt.input_path) {
         Ok(val) => val,
         Err(e) => {
-            eprintln!("Could not load font atlas. Got error: {}", e);
-            return Err(format!("{}", e));
+            return Err(format!("Could not load font atlas. Got error: {}", e));
         }
     };
     let atlas = Rc::new(atlas);
