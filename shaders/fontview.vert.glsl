@@ -1,4 +1,4 @@
-#version 420
+#version 420 core
 
 in vec2 vp;
 in vec2 vt;
