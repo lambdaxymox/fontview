@@ -41,7 +41,14 @@ incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis \
 nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. \
 Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu \
 fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in \
-culpa qui officia deserunt mollit anim id est laborum.";
+culpa qui officia deserunt mollit anim id est laborum.\
+\
+Velit senectus parturient malesuada arcu dui natoque, augue rhoncus netus praesent per \
+maecenas, proin magnis feugiat sagittis neque. Ad vestibulum inceptos gravida mauris \
+congue curae venenatis, porttitor interdum sed turpis varius hendrerit accumsan commodo, \
+condimentum dictumst himenaeos hac a imperdiet. Euismod quisque penatibus litora nisl \
+semper conubia per sollicitudin ultricies, vitae himenaeos senectus dapibus cubilia \
+imperdiet taciti aptent ante, in metus a hac magnis natoque ullamcorper turpis.";
 
 
 struct GameContext {
@@ -286,7 +293,7 @@ fn create_text_writer(
 
     let start_at_x = -0.95;
     let start_at_y = 0.95;
-    let scale_px = 64.0;
+    let scale_px = 72.0;
     let gl_writer = GLTextWriter::new(vao, points_vbo, texcoords_vbo);
     let writer = TextWriter::new(
         context.gl.clone(), atlas.clone(), start_at_x, start_at_y, scale_px, gl_writer
