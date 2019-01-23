@@ -35,8 +35,6 @@ use structopt::StructOpt;
 const GL_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FE;
 const GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: u32 = 0x84FF;
 
-const ATLAS_PATH: &str = "assets/freemono.bmfa";
-
 const DEFAULT_TEXT: &str = "\
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor \
 incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis \
@@ -387,7 +385,7 @@ fn main() {
     println!("OpenGL version supported {}", version);
 
     // Load the font atlas.
-    let atlas = load_font_atlas(ATLAS_PATH);
+    let atlas = load_font_atlas(opt.input_path);
 
     // Create the text writer.
     let (
