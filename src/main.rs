@@ -435,6 +435,9 @@ fn main() {
         let (width, height) = context.gl().window.get_framebuffer_size();
         if (width != context.gl().width as i32) && (height != context.gl().height as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
+
+            // Update the text display if the frame buffer size changed.
+            write!(writer, "{}", string).unwrap();
         }
 
         unsafe {
