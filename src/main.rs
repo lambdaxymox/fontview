@@ -217,9 +217,29 @@ impl GLTextWriter {
     }
 }
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
-    let mut vert_reader = io::Cursor::new(include_str!("../shaders/fontview.vert.glsl"));
-    let mut frag_reader = io::Cursor::new(include_str!("../shaders/fontview.frag.glsl"));
+    let mut vert_reader = io::Cursor::new(include_str!("../shaders/330/fontview.vert.glsl"));
+    let mut frag_reader = io::Cursor::new(include_str!("../shaders/330/fontview.frag.glsl"));
+    let sp = glh::create_program_from_reader(
+        &context.gl(),
+        &mut vert_reader, "fontview.vert.glsl",
+        &mut frag_reader, "fontview.frag.glsl",
+    ).unwrap();
+    assert!(sp > 0);
+
+    let sp_text_color_loc = unsafe {
+        gl::GetUniformLocation(sp, glh::gl_str("text_color").as_ptr())
+    };
+    assert!(sp_text_color_loc > 0);
+
+    (sp, sp_text_color_loc)
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
+    let mut vert_reader = io::Cursor::new(include_str!("../shaders/420/fontview.vert.glsl"));
+    let mut frag_reader = io::Cursor::new(include_str!("../shaders/420/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
         &context.gl(),
         &mut vert_reader, "fontview.vert.glsl",
