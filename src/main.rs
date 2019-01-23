@@ -79,90 +79,99 @@ fn text_to_vbo(
     start_x: f32, start_y: f32, scale_px: f32,
     points_vbo: &mut GLuint, texcoords_vbo: &mut GLuint, point_count: &mut usize) -> usize {
 
-    let mut points_temp = vec![0.0; 12 * st.len()];
-    let mut texcoords_temp = vec![0.0; 12 * st.len()];
-    let mut at_x = start_x;
-    let at_y = start_y;
-
-    for (i, ch_i) in st.chars().enumerate() {
-        let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
-        let atlas_col = metadata_i.column;
-        let atlas_row = metadata_i.row;
-
-        let s = (atlas_col as f32) * (1.0 / (atlas.columns as f32));
-        let t = ((atlas_row + 1) as f32) * (1.0 / (atlas.rows as f32));
-
-        let x_pos = at_x;
-        let y_pos = at_y - (scale_px / (context.height as f32)) * metadata_i.y_offset;
-
-        at_x +=  metadata_i.width * (scale_px / (context.width as f32));
-
-        points_temp[12 * i]     = x_pos;
-        points_temp[12 * i + 1] = y_pos;
-        points_temp[12 * i + 2] = x_pos;
-        points_temp[12 * i + 3] = y_pos - scale_px / (context.height as f32);
-        points_temp[12 * i + 4] = x_pos + scale_px / (context.width as f32);
-        points_temp[12 * i + 5] = y_pos - scale_px / (context.height as f32);
-
-        points_temp[12 * i + 6]  = x_pos + scale_px / (context.width as f32);
-        points_temp[12 * i + 7]  = y_pos - scale_px / (context.height as f32);
-        points_temp[12 * i + 8]  = x_pos + scale_px / (context.width as f32);
-        points_temp[12 * i + 9]  = y_pos;
-        points_temp[12 * i + 10] = x_pos;
-        points_temp[12 * i + 11] = y_pos;
-
-        texcoords_temp[12 * i]     = s;
-        texcoords_temp[12 * i + 1] = 1.0 - t + 1.0 / (atlas.rows as f32);
-        texcoords_temp[12 * i + 2] = s;
-        texcoords_temp[12 * i + 3] = 1.0 - t;
-        texcoords_temp[12 * i + 4] = s + 1.0 / (atlas.columns as f32);
-        texcoords_temp[12 * i + 5] = 1.0 - t;
-
-        texcoords_temp[12 * i + 6]  = s + 1.0 / (atlas.columns as f32);
-        texcoords_temp[12 * i + 7]  = 1.0 - t;
-        texcoords_temp[12 * i + 8]  = s + 1.0 / (atlas.columns as f32);
-        texcoords_temp[12 * i + 9]  = 1.0 - t + 1.0 / (atlas.rows as f32);
-        texcoords_temp[12 * i + 10] = s;
-        texcoords_temp[12 * i + 11] = 1.0 - t + 1.0 / (atlas.rows as f32);
-    }
-
-    unsafe {
-        gl::BindBuffer(gl::ARRAY_BUFFER, *points_vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER, (12 * st.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
-            points_temp.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW
-        );
-        gl::BindBuffer(gl::ARRAY_BUFFER, *texcoords_vbo);
-        gl::BufferData(
-            gl::ARRAY_BUFFER, (12 * st.len() * mem::size_of::<GLfloat>()) as GLsizeiptr, 
-            texcoords_temp.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW
-        );
-    }
-
-    *point_count = 6 * st.len();
-
-    st.len()
+    0
 }
 
 struct TextWriter {
+    context: Rc<RefCell<glh::GLState>>,
+    atlas: Rc<bmfa::BitmapFontAtlas>,
+    start_at_x: f32,
+    start_at_y: f32,
+    scale_px: f32,
+    point_count: usize,
     writer: GLTextWriter,
 }
 
 impl TextWriter {
-    fn new(writer: GLTextWriter) -> TextWriter {
+    fn new(
+        context: Rc<RefCell<glh::GLState>>,
+        atlas: Rc<bmfa::BitmapFontAtlas>,
+        start_at_x: f32, start_at_y: f32, scale_px: f32,
+        writer: GLTextWriter) -> TextWriter {
+
         TextWriter {
+            context: context,
+            atlas: atlas,
+            start_at_x: start_at_x,
+            start_at_y: start_at_y,
+            scale_px: scale_px,
+            point_count: 0,
             writer: writer,
         }
     }
 
     fn point_count(&self) -> usize {
-        self.writer.point_count
+        self.point_count
     }
 }
 
 impl io::Write for TextWriter {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.writer.write(buf)
+        let st = str::from_utf8(buf).unwrap();
+        let atlas = &self.atlas;
+        let scale_px = self.scale_px;
+        let height = (*self.context).borrow().height;
+        let width = (*self.context).borrow().width;
+
+        let mut points_temp = vec![0.0; 12 * st.len()];
+        let mut texcoords_temp = vec![0.0; 12 * st.len()];
+        let mut at_x = self.start_at_x;
+        let at_y = self.start_at_y;
+
+        for (i, ch_i) in st.chars().enumerate() {
+            let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
+            let atlas_col = metadata_i.column;
+            let atlas_row = metadata_i.row;
+
+            let s = (atlas_col as f32) * (1.0 / (atlas.columns as f32));
+            let t = ((atlas_row + 1) as f32) * (1.0 / (atlas.rows as f32));
+
+            let x_pos = at_x;
+            let y_pos = at_y - (scale_px / (height as f32)) * metadata_i.y_offset;
+
+            at_x +=  metadata_i.width * (scale_px / (width as f32));
+
+            points_temp[12 * i]     = x_pos;
+            points_temp[12 * i + 1] = y_pos;
+            points_temp[12 * i + 2] = x_pos;
+            points_temp[12 * i + 3] = y_pos - scale_px / (height as f32);
+            points_temp[12 * i + 4] = x_pos + scale_px / (width as f32);
+            points_temp[12 * i + 5] = y_pos - scale_px / (height as f32);
+
+            points_temp[12 * i + 6]  = x_pos + scale_px / (width as f32);
+            points_temp[12 * i + 7]  = y_pos - scale_px / (height as f32);
+            points_temp[12 * i + 8]  = x_pos + scale_px / (width as f32);
+            points_temp[12 * i + 9]  = y_pos;
+            points_temp[12 * i + 10] = x_pos;
+            points_temp[12 * i + 11] = y_pos;
+
+            texcoords_temp[12 * i]     = s;
+            texcoords_temp[12 * i + 1] = 1.0 - t + 1.0 / (atlas.rows as f32);
+            texcoords_temp[12 * i + 2] = s;
+            texcoords_temp[12 * i + 3] = 1.0 - t;
+            texcoords_temp[12 * i + 4] = s + 1.0 / (atlas.columns as f32);
+            texcoords_temp[12 * i + 5] = 1.0 - t;
+
+            texcoords_temp[12 * i + 6]  = s + 1.0 / (atlas.columns as f32);
+            texcoords_temp[12 * i + 7]  = 1.0 - t;
+            texcoords_temp[12 * i + 8]  = s + 1.0 / (atlas.columns as f32);
+            texcoords_temp[12 * i + 9]  = 1.0 - t + 1.0 / (atlas.rows as f32);
+            texcoords_temp[12 * i + 10] = s;
+            texcoords_temp[12 * i + 11] = 1.0 - t + 1.0 / (atlas.rows as f32);
+        }
+
+        self.point_count = 6 * st.len();
+        self.writer.write(&points_temp, &texcoords_temp)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -171,51 +180,37 @@ impl io::Write for TextWriter {
 }
 
 struct GLTextWriter {
-    context: Rc<RefCell<glh::GLState>>,
-    atlas: Rc<bmfa::BitmapFontAtlas>,
-    start_at_x: f32,
-    start_at_y: f32,
-    scale_px: f32,
+    vao: GLuint,
     points_vbo: GLuint,
     texcoords_vbo: GLuint,
-    point_count: usize,
 }
 
 impl GLTextWriter {
-    fn new(
-        context: Rc<RefCell<glh::GLState>>,
-        atlas: Rc<bmfa::BitmapFontAtlas>,
-        start_at_x: f32, start_at_y: f32, scale_px: f32,
-        points_vbo: GLuint, texcoords_vbo: GLuint) -> GLTextWriter {
-
+    fn new(vao: GLuint, points_vbo: GLuint, texcoords_vbo: GLuint) -> GLTextWriter {
         GLTextWriter {
-            context: context,
-            atlas: atlas,
-            start_at_x: start_at_x,
-            start_at_y: start_at_y,
-            scale_px: scale_px,
+            vao: vao,
             points_vbo: points_vbo,
             texcoords_vbo: texcoords_vbo,
-            point_count: 0
         }
     }
-}
 
-impl io::Write for GLTextWriter {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let st = str::from_utf8(buf).unwrap();
-        self.point_count = 0;
-        let bytes_written = text_to_vbo(
-            &self.context.borrow(), st, &self.atlas,
-            self.start_at_x, self.start_at_y, self.scale_px,
-            &mut self.points_vbo, &mut self.texcoords_vbo, &mut self.point_count
-        );
+    fn write(&mut self, points: &[GLfloat], texcoords: &[GLfloat]) -> io::Result<usize> {
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.points_vbo);
+            gl::BufferData(
+                gl::ARRAY_BUFFER, (mem::size_of::<GLfloat>() * points.len()) as GLsizeiptr,
+                points.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW
+            );
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.texcoords_vbo);
+            gl::BufferData(
+                gl::ARRAY_BUFFER, (mem::size_of::<GLfloat>() * texcoords.len()) as GLsizeiptr,
+                texcoords.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW
+            );
+        }
+
+        let bytes_written = mem::size_of::<GLfloat>() * (points.len() + texcoords.len());
 
         Ok(bytes_written)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
     }
 }
 
@@ -276,34 +271,33 @@ fn create_text_writer(
     context: &mut GameContext,
     atlas: Rc<bmfa::BitmapFontAtlas>) -> (TextWriter, GLuint, GLuint, GLuint) {
 
-    let mut string_vp_vbo = 0;
+    let mut points_vbo = 0;
     unsafe {
-        gl::GenBuffers(1, &mut string_vp_vbo);
+        gl::GenBuffers(1, &mut points_vbo);
     }
-    assert!(string_vp_vbo > 0);
+    assert!(points_vbo > 0);
 
-    let mut string_vt_vbo = 0;
+    let mut texcoords_vbo = 0;
     unsafe {
-        gl::GenBuffers(1, &mut string_vt_vbo);
+        gl::GenBuffers(1, &mut texcoords_vbo);
     }
-    assert!(string_vt_vbo > 0);
+    assert!(texcoords_vbo > 0);
 
-    let mut string_vao = 0;
+    let mut vao = 0;
     unsafe {
-        gl::GenVertexArrays(1, &mut string_vao);
+        gl::GenVertexArrays(1, &mut vao);
     }
-    assert!(string_vao > 0);
+    assert!(vao > 0);
 
     let start_at_x = -0.95;
     let start_at_y = 0.95;
     let scale_px = 64.0;
-    let gl_writer = GLTextWriter::new(
-        context.gl.clone(), atlas.clone(),
-        start_at_x, start_at_y, scale_px, string_vp_vbo, string_vt_vbo
+    let gl_writer = GLTextWriter::new(vao, points_vbo, texcoords_vbo);
+    let writer = TextWriter::new(
+        context.gl.clone(), atlas.clone(), start_at_x, start_at_y, scale_px, gl_writer
     );
-    let writer = TextWriter::new(gl_writer);
 
-    (writer, string_vao, string_vp_vbo, string_vt_vbo)
+    (writer, vao, points_vbo, texcoords_vbo)
 }
 
 ///
