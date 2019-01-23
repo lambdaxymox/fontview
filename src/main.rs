@@ -378,8 +378,13 @@ fn main() {
     }
     assert!(string_vt_vbo > 0);
 
-    /* ***** BEGIN RENDER TEXT TO THE SCREEN ******/
     let mut string_vao = 0;
+    unsafe {
+        gl::GenVertexArrays(1, &mut string_vao);
+    }
+    assert!(string_vao > 0);
+
+    /* ***** BEGIN RENDER TEXT TO THE SCREEN ******/
     let start_at_x = -1.0;
     let start_at_y = 0.95;
     let scale_px = 70.0;
@@ -397,9 +402,7 @@ fn main() {
     */
     /* ******* END RENDER TEXT TO THE SCREEN ****** */
     /* ******* END WRITING TEXT TO THE SCREEN ***** */
-
     unsafe {
-        gl::GenVertexArrays(1, &mut string_vao);
         gl::BindVertexArray(string_vao);
         gl::BindBuffer(gl::ARRAY_BUFFER, string_vp_vbo);
         gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
