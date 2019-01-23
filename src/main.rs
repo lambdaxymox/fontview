@@ -19,6 +19,7 @@ use crate::gl_help as glh;
 
 use glfw::{Action, Context, Key};
 use std::cell::{Ref, RefMut, RefCell};
+use std::error;
 use std::fmt;
 use std::io;
 use std::io::Write;
@@ -370,17 +371,7 @@ fn init_app() -> GameContext {
     context
 }
 
-fn main() {
-    // Parse the shell arguments.
-    let opt = Opt::from_args();
-    match verify_opt(&opt) {
-        Err(e) => {
-            eprintln!("Error: {:?}", e);
-            process::exit(1);
-        }
-        Ok(_) => {}
-    }
-
+fn run_app(opt: Opt) -> Result<(), String> {
     // Start GL context with helper libraries.
     let mut context = init_app();
 
@@ -392,7 +383,14 @@ fn main() {
     println!("OpenGL version supported {}", version);
 
     // Load the font atlas.
-    let atlas = load_font_atlas(opt.input_path);
+    let atlas = match bmfa::load(opt.input_path) {
+        Ok(val) => val,
+        Err(e) => {
+            eprintln!("Could not load font atlas. Got error: {}", e);
+            return Err(format!("{}", e));
+        }
+    };
+    let atlas = Rc::new(atlas);
 
     // Create the text writer.
     let (
@@ -417,7 +415,7 @@ fn main() {
 
     let (sp, sp_text_color_loc) = create_shaders(&mut context);
 
-    let tex = load_font_texture(&atlas, gl::CLAMP_TO_EDGE).unwrap();;
+    let tex = load_font_texture(&atlas, gl::CLAMP_TO_EDGE).unwrap();
 
     unsafe {
         gl::CullFace(gl::BACK);
@@ -465,8 +463,30 @@ fn main() {
             }
             _ => {}
         }
-        
+
         // Send the results to the output.
         context.gl_mut().window.swap_buffers();
     }
+
+    Ok(())
+}
+
+fn main() {
+    // Parse the shell arguments.
+    let opt = Opt::from_args();
+    match verify_opt(&opt) {
+        Err(e) => {
+            eprintln!("Error: {:?}", e);
+            process::exit(1);
+        }
+        Ok(_) => {}
+    }
+
+    process::exit(match run_app(opt) {
+        Ok(_) => 0,
+        Err(e) => {
+            eprintln!("{}", e);
+            1
+        }
+    });
 }
