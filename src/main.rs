@@ -65,6 +65,16 @@ impl GameContext {
     fn gl_mut(&self) -> RefMut<glh::GLState> {
         self.gl.borrow_mut()
     }
+
+    #[inline]
+    fn width(&self) -> u32 {
+        self.gl.borrow().width
+    }
+
+    #[inline]
+    fn height(&self) -> u32 {
+        self.gl.borrow().height
+    }
 }
 
 struct TextWriter {
@@ -431,14 +441,14 @@ fn run_app(opt: Opt) -> Result<(), String> {
         // Partial transparency.
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-        gl::Viewport(0, 0, context.gl().width as i32, context.gl().height as i32);
+        gl::Viewport(0, 0, context.width() as i32, context.height() as i32);
     }
 
     // The main rendering loop.
     while !context.gl().window.should_close() {
         // Check for whether the window size has changed.
         let (width, height) = context.gl().window.get_framebuffer_size();
-        if (width != context.gl().width as i32) && (height != context.gl().height as i32) {
+        if (width != context.width() as i32) && (height != context.height() as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
 
             // Update the text display if the frame buffer size changed.
@@ -448,7 +458,7 @@ fn run_app(opt: Opt) -> Result<(), String> {
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-            gl::Viewport(0, 0, context.gl().width as i32, context.gl().height as i32);
+            gl::Viewport(0, 0, context.width() as i32, context.height() as i32);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
