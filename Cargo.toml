@@ -8,11 +8,11 @@ description = "A shell utility for prototyping bitmapped fonts in computer graph
 keywords = ["games", "game development", "fonts", "graphics"]
 
 [dependencies]
-glfw = "0.25.0"
+glfw = "0.28.0"
 log = "0.4.6"
 stb_image = "0.2.2"
-structopt = "0.2"
+structopt = "0.2.15"
 bmfa = { git = "https://github.com/stallmanifold/bmfa" }
 
 [build-dependencies]
-gl_generator = "0.10.0"
+gl_generator = "0.11.0"
