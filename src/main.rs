@@ -380,6 +380,8 @@ impl fmt::Display for OptError {
     }
 }
 
+impl std::error::Error for OptError {}
+
 ///
 /// The shell input options for `fontview`.
 ///
@@ -421,7 +423,24 @@ fn init_app() -> GameContext {
     context
 }
 
-fn run_app(opt: Opt) -> Result<(), String> {
+#[derive(Debug)]
+enum AppError {
+    CouldNotLoadFontAtlas(Box<dyn std::error::Error>),
+}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            AppError::CouldNotLoadFontAtlas(ref e) => {
+                write!(f, "Could not load font atlas. Got error: {}", e)
+            }
+        }
+    }
+}
+
+impl std::error::Error for AppError {}
+
+fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     // Start GL context with helper libraries.
     let mut context = init_app();
 
@@ -434,7 +453,7 @@ fn run_app(opt: Opt) -> Result<(), String> {
     let atlas = match bmfa::load(opt.input_path) {
         Ok(val) => val,
         Err(e) => {
-            return Err(format!("Could not load font atlas. Got error: {}", e));
+            return Err(Box::new(AppError::CouldNotLoadFontAtlas(Box::new(e))));
         }
     };
     let atlas = Rc::new(atlas);
@@ -518,22 +537,22 @@ fn run_app(opt: Opt) -> Result<(), String> {
     Ok(())
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Parse the shell arguments.
     let opt = Opt::from_args();
     match verify_opt(&opt) {
         Err(e) => {
             eprintln!("Error: {:?}", e);
-            process::exit(1);
+            return Err(Box::new(e));
         }
         Ok(_) => {}
     }
 
-    process::exit(match run_app(opt) {
-        Ok(_) => 0,
+    match run_app(opt) {
+        Ok(_) => Ok(()),
         Err(e) => {
             eprintln!("{}", e);
-            1
+            return Err(e);
         }
-    });
+    }
 }
