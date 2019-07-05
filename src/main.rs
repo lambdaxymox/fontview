@@ -243,10 +243,15 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
     Ok(tex)
 }
 
-fn create_text_writer(
-    context: &mut AppContext,
-    atlas: &bmfa::BitmapFontAtlas) -> (GLTextWriter, TextPlacement) {
+fn create_text_placement() -> TextPlacement {
+    let start_at_x = -0.95;
+    let start_at_y = 0.95;
+    let scale_px = 72.0;
 
+    TextPlacement::new(start_at_x, start_at_y, scale_px)
+}
+
+fn create_text_writer(context: &mut AppContext) -> GLTextWriter {
     let mut points_vbo = 0;
     unsafe {
         gl::GenBuffers(1, &mut points_vbo);
@@ -265,13 +270,7 @@ fn create_text_writer(
     }
     assert!(vao > 0);
 
-    let start_at_x = -0.95;
-    let start_at_y = 0.95;
-    let scale_px = 72.0;
-    let writer = GLTextWriter::new(vao, points_vbo, texcoords_vbo);
-    let placement = TextPlacement::new(start_at_x, start_at_y, scale_px);
-
-    (writer, placement)
+    GLTextWriter::new(vao, points_vbo, texcoords_vbo)
 }
 
 ///
@@ -375,7 +374,8 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create the text writer.
-    let (mut writer, placement) = create_text_writer(&mut context, &atlas);
+    let placement = create_text_placement();
+    let mut writer = create_text_writer(&mut context);
 
     // Write out the lorem ipsum text to the GPU.
     let string = DEFAULT_TEXT;
