@@ -53,6 +53,7 @@ imperdiet taciti aptent ante, in metus a hac magnis natoque ullamcorper turpis."
 
 struct AppContext {
     gl: Rc<RefCell<glh::GLState>>,
+    //writer: GLTextWriter,
 }
 
 impl AppContext {
@@ -107,6 +108,92 @@ impl AppContext {
     }
 }
 
+fn text_to_screen(context: &AppContext, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
+    let st = str::from_utf8(buf).unwrap();
+    //let atlas = &self.atlas;
+    let scale_px = placement.scale_px;
+    let height = (*context.gl).borrow().height;
+    let width = (*context.gl).borrow().width;
+    let line_spacing = 0.05;
+
+    let mut points = vec![0.0; 12 * st.len()];
+    let mut texcoords = vec![0.0; 12 * st.len()];
+    let mut at_x = placement.start_at_x;
+    let end_at_x = 0.95;
+    let mut at_y = placement.start_at_y;
+
+    for (i, ch_i) in st.chars().enumerate() {
+        let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
+        let atlas_col = metadata_i.column;
+        let atlas_row = metadata_i.row;
+
+        let s = (atlas_col as f32) * (1.0 / (atlas.columns as f32));
+        let t = ((atlas_row + 1) as f32) * (1.0 / (atlas.rows as f32));
+
+        let x_pos = at_x;
+        let y_pos = at_y - (scale_px / (height as f32)) * metadata_i.y_offset;
+
+        at_x += metadata_i.width * (scale_px / width as f32);
+        if at_x >= end_at_x {
+            at_x = placement.start_at_x;
+            at_y -= line_spacing + metadata_i.height * (scale_px / height as f32);
+        }
+
+        points[12 * i]     = x_pos;
+        points[12 * i + 1] = y_pos;
+        points[12 * i + 2] = x_pos;
+        points[12 * i + 3] = y_pos - scale_px / (height as f32);
+        points[12 * i + 4] = x_pos + scale_px / (width as f32);
+        points[12 * i + 5] = y_pos - scale_px / (height as f32);
+
+        points[12 * i + 6]  = x_pos + scale_px / (width as f32);
+        points[12 * i + 7]  = y_pos - scale_px / (height as f32);
+        points[12 * i + 8]  = x_pos + scale_px / (width as f32);
+        points[12 * i + 9]  = y_pos;
+        points[12 * i + 10] = x_pos;
+        points[12 * i + 11] = y_pos;
+
+        texcoords[12 * i]     = s;
+        texcoords[12 * i + 1] = 1.0 - t + 1.0 / (atlas.rows as f32);
+        texcoords[12 * i + 2] = s;
+        texcoords[12 * i + 3] = 1.0 - t;
+        texcoords[12 * i + 4] = s + 1.0 / (atlas.columns as f32);
+        texcoords[12 * i + 5] = 1.0 - t;
+
+        texcoords[12 * i + 6]  = s + 1.0 / (atlas.columns as f32);
+        texcoords[12 * i + 7]  = 1.0 - t;
+        texcoords[12 * i + 8]  = s + 1.0 / (atlas.columns as f32);
+        texcoords[12 * i + 9]  = 1.0 - t + 1.0 / (atlas.rows as f32);
+        texcoords[12 * i + 10] = s;
+        texcoords[12 * i + 11] = 1.0 - t + 1.0 / (atlas.rows as f32);
+    }
+
+    let point_count = 6 * st.len();
+    writer.write(&points, &texcoords)?;
+
+    Ok((st.len(), point_count))
+}
+
+#[derive(Copy, Clone, Debug)]
+struct TextPlacement {
+    start_at_x: f32,
+    start_at_y: f32,
+    scale_px: f32,
+    point_count: usize, 
+}
+
+impl TextPlacement {
+    fn new(start_at_x: f32, start_at_y: f32, scale_px: f32) -> TextPlacement {
+        TextPlacement {
+            start_at_x: start_at_x,
+            start_at_y: start_at_y,
+            scale_px: scale_px,
+            point_count: 0,
+        }
+    }
+}
+
+/*
 struct TextWriter {
     context: Rc<RefCell<glh::GLState>>,
     atlas: Rc<bmfa::BitmapFontAtlas>,
@@ -211,6 +298,7 @@ impl io::Write for TextWriter {
         Ok(())
     }
 }
+*/
 
 struct GLTextWriter {
     vao: GLuint,
@@ -322,7 +410,7 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 
 fn create_text_writer(
     context: &mut AppContext,
-    atlas: Rc<bmfa::BitmapFontAtlas>) -> (TextWriter, GLuint, GLuint, GLuint) {
+    atlas: Rc<bmfa::BitmapFontAtlas>) -> (GLTextWriter, TextPlacement, GLuint, GLuint, GLuint) {
 
     let mut points_vbo = 0;
     unsafe {
@@ -345,12 +433,10 @@ fn create_text_writer(
     let start_at_x = -0.95;
     let start_at_y = 0.95;
     let scale_px = 72.0;
-    let gl_writer = GLTextWriter::new(vao, points_vbo, texcoords_vbo);
-    let writer = TextWriter::new(
-        context.gl.clone(), atlas.clone(), start_at_x, start_at_y, scale_px, gl_writer
-    );
+    let writer = GLTextWriter::new(vao, points_vbo, texcoords_vbo);
+    let placement = TextPlacement::new(start_at_x, start_at_y, scale_px);
 
-    (writer, vao, points_vbo, texcoords_vbo)
+    (writer, placement, vao, points_vbo, texcoords_vbo)
 }
 
 ///
@@ -461,13 +547,15 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     // Create the text writer.
     let (
         mut writer,
+        placement,
         string_vao,
         string_vp_vbo,
         string_vt_vbo) = create_text_writer(&mut context, atlas.clone());
 
     // Write out the lorem ipsum text.
     let string = DEFAULT_TEXT;
-    write!(writer, "{}", string).unwrap();
+    //write!(writer, "{}", string).unwrap();
+    let mut point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
 
     unsafe {
         gl::BindVertexArray(string_vao);
@@ -501,7 +589,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
 
             // Update the text display if the frame buffer size changed.
-            write!(writer, "{}", string).unwrap();
+            point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
         }
 
         unsafe {
@@ -519,7 +607,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
 
             gl::BindVertexArray(string_vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
-            gl::DrawArrays(gl::TRIANGLES, 0, writer.point_count() as GLint);
+            gl::DrawArrays(gl::TRIANGLES, 0, point_count as GLint);
         }
 
         context.poll_events();
