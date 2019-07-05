@@ -377,7 +377,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     let placement = create_text_placement();
     let mut writer = create_text_writer(&mut context);
 
-    // Write out the lorem ipsum text to the GPU.
+    // Load the text onto the GPU.
     let string = DEFAULT_TEXT;
     let mut point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
 
@@ -458,11 +458,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(_) => {}
     }
 
-    match run_app(opt) {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            eprintln!("{}", e);
-            return Err(e);
-        }
-    }
+    run_app(opt)
 }
