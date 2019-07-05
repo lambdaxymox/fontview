@@ -24,7 +24,6 @@ use std::mem;
 use std::path::PathBuf;
 use std::process;
 use std::ptr;
-use std::rc::Rc;
 use std::str;
 use structopt::StructOpt;
 
@@ -298,7 +297,7 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 
 fn create_text_writer(
     context: &mut AppContext,
-    atlas: Rc<bmfa::BitmapFontAtlas>) -> (GLTextWriter, TextPlacement, GLuint, GLuint, GLuint) {
+    atlas: &bmfa::BitmapFontAtlas) -> (GLTextWriter, TextPlacement, GLuint, GLuint, GLuint) {
 
     let mut points_vbo = 0;
     unsafe {
@@ -426,7 +425,6 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
             return Err(Box::new(AppError::CouldNotLoadFontAtlas(Box::new(e))));
         }
     };
-    let atlas = Rc::new(atlas);
 
     // Create the text writer.
     let (
@@ -434,7 +432,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         placement,
         string_vao,
         string_vp_vbo,
-        string_vt_vbo) = create_text_writer(&mut context, atlas.clone());
+        string_vt_vbo) = create_text_writer(&mut context, &atlas);
 
     // Write out the lorem ipsum text.
     let string = DEFAULT_TEXT;
