@@ -48,12 +48,12 @@ semper conubia per sollicitudin ultricies, vitae himenaeos senectus dapibus cubi
 imperdiet taciti aptent ante, in metus a hac magnis natoque ullamcorper turpis.";
 
 
-struct AppContext {
+struct App {
     gl: glh::GLState,
     //writer: GLTextWriter,
 }
 
-fn text_to_screen(context: &AppContext, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
+fn text_to_screen(context: &App, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
     let st = str::from_utf8(buf).unwrap();
     let scale_px = placement.scale_px;
     let height = context.gl.height;
@@ -190,7 +190,7 @@ fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-fn create_shaders(context: &mut AppContext) -> (GLuint, GLint) {
+fn create_shaders(context: &mut App) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/420/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/420/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
@@ -251,7 +251,7 @@ fn create_text_placement() -> TextPlacement {
     TextPlacement::new(start_at_x, start_at_y, scale_px)
 }
 
-fn create_text_writer(context: &mut AppContext) -> GLTextWriter {
+fn create_text_writer(context: &mut App) -> GLTextWriter {
     let mut points_vbo = 0;
     unsafe {
         gl::GenBuffers(1, &mut points_vbo);
@@ -280,7 +280,7 @@ fn create_text_writer(context: &mut AppContext) -> GLTextWriter {
 /// whenever the size of the viewport changes.
 ///
 #[inline]
-fn glfw_framebuffer_size_callback(context: &mut AppContext, width: u32, height: u32) {
+fn glfw_framebuffer_size_callback(context: &mut App, width: u32, height: u32) {
     context.gl.width = width;
     context.gl.height = height;
 }
@@ -326,7 +326,7 @@ fn verify_opt(opt: &Opt) -> Result<(), OptError> {
     Ok(())
 }
 
-fn init_app() -> AppContext {
+fn init_app() -> App {
     let gl_state = match glh::start_gl(1024, 576) {
         Ok(val) => val,
         Err(e) => {
@@ -336,7 +336,7 @@ fn init_app() -> AppContext {
         }
     };
     
-    AppContext { gl: gl_state }
+    App { gl: gl_state }
 }
 
 #[derive(Debug)]
