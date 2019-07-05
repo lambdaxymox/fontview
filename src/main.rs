@@ -227,7 +227,7 @@ fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/330/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/330/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
-        &context.gl(),
+        &context.gl,
         &mut vert_reader, "fontview.vert.glsl",
         &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
@@ -246,7 +246,7 @@ fn create_shaders(context: &mut AppContext) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/420/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/420/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
-        &context.gl(),
+        &context.gl,
         &mut vert_reader, "fontview.vert.glsl",
         &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
@@ -334,8 +334,8 @@ fn create_text_writer(
 ///
 #[inline]
 fn glfw_framebuffer_size_callback(context: &mut AppContext, width: u32, height: u32) {
-    context.gl_mut().width = width;
-    context.gl_mut().height = height;
+    context.gl.width = width;
+    context.gl.height = height;
 }
 
 #[derive(Clone, Debug)]
@@ -459,14 +459,14 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         // Partial transparency.
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-        gl::Viewport(0, 0, context.width() as i32, context.height() as i32);
+        gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
     }
 
     // The main rendering loop.
     while !context.window_should_close() {
         // Check for whether the window size has changed.
         let (width, height) = context.get_framebuffer_size();
-        if (width != context.width() as i32) && (height != context.height() as i32) {
+        if (width != context.gl.width as i32) && (height != context.gl.height as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
 
             // Update the text display if the frame buffer size changed.
@@ -476,7 +476,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-            gl::Viewport(0, 0, context.width() as i32, context.height() as i32);
+            gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
