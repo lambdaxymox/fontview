@@ -51,67 +51,67 @@ imperdiet taciti aptent ante, in metus a hac magnis natoque ullamcorper turpis."
 
 
 struct AppContext {
-    gl: Rc<RefCell<glh::GLState>>,
+    gl: glh::GLState,
     //writer: GLTextWriter,
 }
 
 impl AppContext {
     #[inline]
-    fn gl(&self) -> Ref<glh::GLState> {
-        self.gl.borrow()
+    fn gl(&self) -> &glh::GLState {
+        &self.gl
     }
 
     #[inline]
-    fn gl_mut(&self) -> RefMut<glh::GLState> {
-        self.gl.borrow_mut()
+    fn gl_mut(&mut self) -> &mut glh::GLState {
+        &mut self.gl
     }
 
     #[inline]
     fn width(&self) -> u32 {
-        self.gl.borrow().width
+        self.gl.width
     }
 
     #[inline]
     fn height(&self) -> u32 {
-        self.gl.borrow().height
+        self.gl.height
     }
 
     #[inline]
     fn poll_events(&mut self) {
-        self.gl.borrow_mut().glfw.poll_events();
+        self.gl.glfw.poll_events();
     }
 
     #[inline]
     fn swap_buffers(&mut self) {
-        self.gl.borrow_mut().window.swap_buffers();
+        self.gl.window.swap_buffers();
     }
 
     #[inline]
     fn get_framebuffer_size(&mut self) -> (i32, i32) {
-        self.gl.borrow_mut().window.get_framebuffer_size()
+        self.gl.window.get_framebuffer_size()
     }
 
     #[inline]
     fn window_should_close(&self) -> bool {
-        self.gl.borrow().window.should_close()
+        self.gl.window.should_close()
     }
 
     #[inline]
     fn window_set_should_close(&mut self, close: bool) {
-        self.gl.borrow_mut().window.set_should_close(close);
+        self.gl.window.set_should_close(close);
     }
 
     #[inline]
     fn window_get_key(&self, key: Key) -> Action {
-        self.gl.borrow().window.get_key(key)
+        self.gl.window.get_key(key)
     }
 }
 
 fn text_to_screen(context: &AppContext, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
     let st = str::from_utf8(buf).unwrap();
     let scale_px = placement.scale_px;
-    let height = (*context.gl).borrow().height;
-    let width = (*context.gl).borrow().width;
+    let height = context.gl.height;
+    let width = context.gl.width;
     let line_spacing = 0.05;
 
     let mut points = vec![0.0; 12 * st.len()];
@@ -390,12 +390,8 @@ fn init_app() -> AppContext {
             process::exit(1);
         }
     };
-
-    let context = AppContext {
-        gl: Rc::new(RefCell::new(gl_state)),
-    };
-
-    context
+    
+    AppContext { gl: gl_state }
 }
 
 #[derive(Debug)]
