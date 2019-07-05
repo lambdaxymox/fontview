@@ -50,10 +50,10 @@ imperdiet taciti aptent ante, in metus a hac magnis natoque ullamcorper turpis."
 
 struct App {
     gl: glh::GLState,
-    //writer: GLTextWriter,
+    writer: GLTextWriter,
 }
 
-fn text_to_screen(context: &App, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
+fn text_to_screen(context: &App, atlas: &bmfa::BitmapFontAtlas, mut writer: GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
     let st = str::from_utf8(buf).unwrap();
     let scale_px = placement.scale_px;
     let height = context.gl.height;
@@ -135,6 +135,7 @@ impl TextPlacement {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 struct GLTextWriter {
     vao: GLuint,
     points_vbo: GLuint,
@@ -171,7 +172,7 @@ impl GLTextWriter {
 }
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
-fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
+fn create_shaders(context: &mut App) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/330/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/330/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
@@ -251,7 +252,7 @@ fn create_text_placement() -> TextPlacement {
     TextPlacement::new(start_at_x, start_at_y, scale_px)
 }
 
-fn create_text_writer(context: &mut App) -> GLTextWriter {
+fn create_text_writer() -> GLTextWriter {
     let mut points_vbo = 0;
     unsafe {
         gl::GenBuffers(1, &mut points_vbo);
@@ -335,8 +336,9 @@ fn init_app() -> App {
             process::exit(1);
         }
     };
+    let writer = create_text_writer();
     
-    App { gl: gl_state }
+    App { gl: gl_state, writer: writer }
 }
 
 #[derive(Debug)]
@@ -373,20 +375,18 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    // Create the text writer.
     let placement = create_text_placement();
-    let mut writer = create_text_writer(&mut context);
 
     // Load the text onto the GPU.
     let string = DEFAULT_TEXT;
-    let mut point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
+    let mut point_count = text_to_screen(&context, &atlas, context.writer, placement, string.as_bytes()).unwrap().1;
 
     unsafe {
-        gl::BindVertexArray(writer.vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, writer.points_vbo);
+        gl::BindVertexArray(context.writer.vao);
+        gl::BindBuffer(gl::ARRAY_BUFFER, context.writer.points_vbo);
         gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, writer.texcoords_vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, context.writer.texcoords_vbo);
         gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(1);
     }
@@ -411,7 +411,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         let (width, height) = context.gl.window.get_framebuffer_size();
         if (width != context.gl.width as i32) && (height != context.gl.height as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
-            point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
+            point_count = text_to_screen(&context, &atlas, context.writer, placement, string.as_bytes()).unwrap().1;
         }
 
         unsafe {
@@ -427,7 +427,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
             gl::Disable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
 
-            gl::BindVertexArray(writer.vao);
+            gl::BindVertexArray(context.writer.vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
             gl::DrawArrays(gl::TRIANGLES, 0, point_count as GLint);
         }
