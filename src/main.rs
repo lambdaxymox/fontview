@@ -109,7 +109,6 @@ impl AppContext {
 
 fn text_to_screen(context: &AppContext, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
     let st = str::from_utf8(buf).unwrap();
-    //let atlas = &self.atlas;
     let scale_px = placement.scale_px;
     let height = (*context.gl).borrow().height;
     let width = (*context.gl).borrow().width;
@@ -191,113 +190,6 @@ impl TextPlacement {
         }
     }
 }
-
-/*
-struct TextWriter {
-    context: Rc<RefCell<glh::GLState>>,
-    atlas: Rc<bmfa::BitmapFontAtlas>,
-    start_at_x: f32,
-    start_at_y: f32,
-    scale_px: f32,
-    point_count: usize,
-    writer: GLTextWriter,
-}
-
-impl TextWriter {
-    fn new(
-        context: Rc<RefCell<glh::GLState>>,
-        atlas: Rc<bmfa::BitmapFontAtlas>,
-        start_at_x: f32, start_at_y: f32, scale_px: f32,
-        writer: GLTextWriter) -> TextWriter {
-
-        TextWriter {
-            context: context,
-            atlas: atlas,
-            start_at_x: start_at_x,
-            start_at_y: start_at_y,
-            scale_px: scale_px,
-            point_count: 0,
-            writer: writer,
-        }
-    }
-
-    fn point_count(&self) -> usize {
-        self.point_count
-    }
-}
-
-impl io::Write for TextWriter {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let st = str::from_utf8(buf).unwrap();
-        let atlas = &self.atlas;
-        let scale_px = self.scale_px;
-        let height = (*self.context).borrow().height;
-        let width = (*self.context).borrow().width;
-        let line_spacing = 0.05;
-
-        let mut points = vec![0.0; 12 * st.len()];
-        let mut texcoords = vec![0.0; 12 * st.len()];
-        let mut at_x = self.start_at_x;
-        let end_at_x = 0.95;
-        let mut at_y = self.start_at_y;
-
-        for (i, ch_i) in st.chars().enumerate() {
-            let metadata_i = atlas.glyph_metadata[&(ch_i as usize)];
-            let atlas_col = metadata_i.column;
-            let atlas_row = metadata_i.row;
-
-            let s = (atlas_col as f32) * (1.0 / (atlas.columns as f32));
-            let t = ((atlas_row + 1) as f32) * (1.0 / (atlas.rows as f32));
-
-            let x_pos = at_x;
-            let y_pos = at_y - (scale_px / (height as f32)) * metadata_i.y_offset;
-
-            at_x += metadata_i.width * (scale_px / width as f32);
-            if at_x >= end_at_x {
-                at_x = self.start_at_x;
-                at_y -= line_spacing + metadata_i.height * (scale_px / height as f32);
-            }
-
-            points[12 * i]     = x_pos;
-            points[12 * i + 1] = y_pos;
-            points[12 * i + 2] = x_pos;
-            points[12 * i + 3] = y_pos - scale_px / (height as f32);
-            points[12 * i + 4] = x_pos + scale_px / (width as f32);
-            points[12 * i + 5] = y_pos - scale_px / (height as f32);
-
-            points[12 * i + 6]  = x_pos + scale_px / (width as f32);
-            points[12 * i + 7]  = y_pos - scale_px / (height as f32);
-            points[12 * i + 8]  = x_pos + scale_px / (width as f32);
-            points[12 * i + 9]  = y_pos;
-            points[12 * i + 10] = x_pos;
-            points[12 * i + 11] = y_pos;
-
-            texcoords[12 * i]     = s;
-            texcoords[12 * i + 1] = 1.0 - t + 1.0 / (atlas.rows as f32);
-            texcoords[12 * i + 2] = s;
-            texcoords[12 * i + 3] = 1.0 - t;
-            texcoords[12 * i + 4] = s + 1.0 / (atlas.columns as f32);
-            texcoords[12 * i + 5] = 1.0 - t;
-
-            texcoords[12 * i + 6]  = s + 1.0 / (atlas.columns as f32);
-            texcoords[12 * i + 7]  = 1.0 - t;
-            texcoords[12 * i + 8]  = s + 1.0 / (atlas.columns as f32);
-            texcoords[12 * i + 9]  = 1.0 - t + 1.0 / (atlas.rows as f32);
-            texcoords[12 * i + 10] = s;
-            texcoords[12 * i + 11] = 1.0 - t + 1.0 / (atlas.rows as f32);
-        }
-
-        self.point_count = 6 * st.len();
-        self.writer.write(&points, &texcoords)?;
-
-        Ok(st.len())
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
-*/
 
 struct GLTextWriter {
     vao: GLuint,
@@ -553,7 +445,6 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
 
     // Write out the lorem ipsum text.
     let string = DEFAULT_TEXT;
-    //write!(writer, "{}", string).unwrap();
     let mut point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
 
     unsafe {
