@@ -51,11 +51,11 @@ semper conubia per sollicitudin ultricies, vitae himenaeos senectus dapibus cubi
 imperdiet taciti aptent ante, in metus a hac magnis natoque ullamcorper turpis.";
 
 
-struct GameContext {
+struct AppContext {
     gl: Rc<RefCell<glh::GLState>>,
 }
 
-impl GameContext {
+impl AppContext {
     #[inline]
     fn gl(&self) -> Ref<glh::GLState> {
         self.gl.borrow()
@@ -267,7 +267,7 @@ fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-fn create_shaders(context: &mut GameContext) -> (GLuint, GLint) {
+fn create_shaders(context: &mut AppContext) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/420/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/420/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
@@ -321,7 +321,7 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 }
 
 fn create_text_writer(
-    context: &mut GameContext,
+    context: &mut AppContext,
     atlas: Rc<bmfa::BitmapFontAtlas>) -> (TextWriter, GLuint, GLuint, GLuint) {
 
     let mut points_vbo = 0;
@@ -360,7 +360,7 @@ fn create_text_writer(
 /// whenever the size of the viewport changes.
 ///
 #[inline]
-fn glfw_framebuffer_size_callback(context: &mut GameContext, width: u32, height: u32) {
+fn glfw_framebuffer_size_callback(context: &mut AppContext, width: u32, height: u32) {
     context.gl_mut().width = width;
     context.gl_mut().height = height;
 }
@@ -406,7 +406,7 @@ fn verify_opt(opt: &Opt) -> Result<(), OptError> {
     Ok(())
 }
 
-fn init_app() -> GameContext {
+fn init_app() -> AppContext {
     let gl_state = match glh::start_gl(1024, 576) {
         Ok(val) => val,
         Err(e) => {
@@ -416,7 +416,7 @@ fn init_app() -> GameContext {
         }
     };
 
-    let context = GameContext {
+    let context = AppContext {
         gl: Rc::new(RefCell::new(gl_state)),
     };
 
