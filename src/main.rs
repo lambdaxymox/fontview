@@ -434,7 +434,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         string_vp_vbo,
         string_vt_vbo) = create_text_writer(&mut context, &atlas);
 
-    // Write out the lorem ipsum text.
+    // Write out the lorem ipsum text to the GPU.
     let string = DEFAULT_TEXT;
     let mut point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
 
@@ -463,13 +463,11 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // The main rendering loop.
-    while !context.window_should_close() {
-        // Check for whether the window size has changed.
-        let (width, height) = context.get_framebuffer_size();
+    while !context.gl.window.should_close() {
+        // // Update the text display if the frame buffer size changed.
+        let (width, height) = context.gl.window.get_framebuffer_size();
         if (width != context.gl.width as i32) && (height != context.gl.height as i32) {
             glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
-
-            // Update the text display if the frame buffer size changed.
             point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
         }
 
@@ -491,16 +489,16 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
             gl::DrawArrays(gl::TRIANGLES, 0, point_count as GLint);
         }
 
-        context.poll_events();
-        match context.window_get_key(Key::Escape) {
+        context.gl.glfw.poll_events();
+        match context.gl.window.get_key(Key::Escape) {
             Action::Press | Action::Repeat => {
-                context.window_set_should_close(true);
+                context.gl.window.set_should_close(true);
             }
             _ => {}
         }
 
         // Send the results to the output.
-        context.swap_buffers();
+        context.gl.window.swap_buffers();
     }
 
     Ok(())
