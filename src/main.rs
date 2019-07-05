@@ -177,7 +177,6 @@ struct TextPlacement {
     start_at_x: f32,
     start_at_y: f32,
     scale_px: f32,
-    point_count: usize, 
 }
 
 impl TextPlacement {
@@ -186,7 +185,6 @@ impl TextPlacement {
             start_at_x: start_at_x,
             start_at_y: start_at_y,
             scale_px: scale_px,
-            point_count: 0,
         }
     }
 }
