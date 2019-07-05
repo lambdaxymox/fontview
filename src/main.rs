@@ -245,7 +245,7 @@ fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Re
 
 fn create_text_writer(
     context: &mut AppContext,
-    atlas: &bmfa::BitmapFontAtlas) -> (GLTextWriter, TextPlacement, GLuint, GLuint, GLuint) {
+    atlas: &bmfa::BitmapFontAtlas) -> (GLTextWriter, TextPlacement) {
 
     let mut points_vbo = 0;
     unsafe {
@@ -271,7 +271,7 @@ fn create_text_writer(
     let writer = GLTextWriter::new(vao, points_vbo, texcoords_vbo);
     let placement = TextPlacement::new(start_at_x, start_at_y, scale_px);
 
-    (writer, placement, vao, points_vbo, texcoords_vbo)
+    (writer, placement)
 }
 
 ///
@@ -375,23 +375,18 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create the text writer.
-    let (
-        mut writer,
-        placement,
-        string_vao,
-        string_vp_vbo,
-        string_vt_vbo) = create_text_writer(&mut context, &atlas);
+    let (mut writer, placement) = create_text_writer(&mut context, &atlas);
 
     // Write out the lorem ipsum text to the GPU.
     let string = DEFAULT_TEXT;
     let mut point_count = text_to_screen(&context, &atlas, &mut writer, placement, string.as_bytes()).unwrap().1;
 
     unsafe {
-        gl::BindVertexArray(string_vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, string_vp_vbo);
+        gl::BindVertexArray(writer.vao);
+        gl::BindBuffer(gl::ARRAY_BUFFER, writer.points_vbo);
         gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, string_vt_vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, writer.texcoords_vbo);
         gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(1);
     }
@@ -432,7 +427,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
             gl::Disable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
 
-            gl::BindVertexArray(string_vao);
+            gl::BindVertexArray(writer.vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
             gl::DrawArrays(gl::TRIANGLES, 0, point_count as GLint);
         }
