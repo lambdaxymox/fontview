@@ -53,58 +53,6 @@ struct AppContext {
     //writer: GLTextWriter,
 }
 
-impl AppContext {
-    #[inline]
-    fn gl(&self) -> &glh::GLState {
-        &self.gl
-    }
-
-    #[inline]
-    fn gl_mut(&mut self) -> &mut glh::GLState {
-        &mut self.gl
-    }
-
-    #[inline]
-    fn width(&self) -> u32 {
-        self.gl.width
-    }
-
-    #[inline]
-    fn height(&self) -> u32 {
-        self.gl.height
-    }
-
-    #[inline]
-    fn poll_events(&mut self) {
-        self.gl.glfw.poll_events();
-    }
-
-    #[inline]
-    fn swap_buffers(&mut self) {
-        self.gl.window.swap_buffers();
-    }
-
-    #[inline]
-    fn get_framebuffer_size(&mut self) -> (i32, i32) {
-        self.gl.window.get_framebuffer_size()
-    }
-
-    #[inline]
-    fn window_should_close(&self) -> bool {
-        self.gl.window.should_close()
-    }
-
-    #[inline]
-    fn window_set_should_close(&mut self, close: bool) {
-        self.gl.window.set_should_close(close);
-    }
-
-    #[inline]
-    fn window_get_key(&self, key: Key) -> Action {
-        self.gl.window.get_key(key)
-    }
-}
-
 fn text_to_screen(context: &AppContext, atlas: &bmfa::BitmapFontAtlas, writer: &mut GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
     let st = str::from_utf8(buf).unwrap();
     let scale_px = placement.scale_px;
