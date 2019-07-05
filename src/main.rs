@@ -53,11 +53,11 @@ struct App {
     writer: GLTextWriter,
 }
 
-fn text_to_screen(context: &App, atlas: &bmfa::BitmapFontAtlas, mut writer: GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
+fn text_to_screen(app: &App, atlas: &bmfa::BitmapFontAtlas, mut writer: GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
     let st = str::from_utf8(buf).unwrap();
     let scale_px = placement.scale_px;
-    let height = context.gl.height;
-    let width = context.gl.width;
+    let height = app.gl.height;
+    let width = app.gl.width;
     let line_spacing = 0.05;
 
     let mut points = vec![0.0; 12 * st.len()];
@@ -172,11 +172,11 @@ impl GLTextWriter {
 }
 
 #[cfg(any(target_os = "macos", target_os = "windows"))]
-fn create_shaders(context: &mut App) -> (GLuint, GLint) {
+fn create_shaders(app: &mut App) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/330/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/330/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
-        &context.gl,
+        &app.gl,
         &mut vert_reader, "fontview.vert.glsl",
         &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
@@ -191,11 +191,11 @@ fn create_shaders(context: &mut App) -> (GLuint, GLint) {
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-fn create_shaders(context: &mut App) -> (GLuint, GLint) {
+fn create_shaders(app: &mut App) -> (GLuint, GLint) {
     let mut vert_reader = io::Cursor::new(include_str!("../shaders/420/fontview.vert.glsl"));
     let mut frag_reader = io::Cursor::new(include_str!("../shaders/420/fontview.frag.glsl"));
     let sp = glh::create_program_from_reader(
-        &context.gl,
+        &app.gl,
         &mut vert_reader, "fontview.vert.glsl",
         &mut frag_reader, "fontview.frag.glsl",
     ).unwrap();
@@ -281,9 +281,9 @@ fn create_text_writer() -> GLTextWriter {
 /// whenever the size of the viewport changes.
 ///
 #[inline]
-fn glfw_framebuffer_size_callback(context: &mut App, width: u32, height: u32) {
-    context.gl.width = width;
-    context.gl.height = height;
+fn glfw_framebuffer_size_callback(app: &mut App, width: u32, height: u32) {
+    app.gl.width = width;
+    app.gl.height = height;
 }
 
 #[derive(Clone, Debug)]
@@ -360,7 +360,7 @@ impl std::error::Error for AppError {}
 
 fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
     // Start GL context with helper libraries.
-    let mut context = init_app();
+    let mut app = init_app();
 
     let renderer = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::RENDERER) });
     let version = glh::glubyte_ptr_to_string(unsafe { gl::GetString(gl::VERSION) });
@@ -379,19 +379,19 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
 
     // Load the text onto the GPU.
     let string = DEFAULT_TEXT;
-    let mut point_count = text_to_screen(&context, &atlas, context.writer, placement, string.as_bytes()).unwrap().1;
+    let mut point_count = text_to_screen(&app, &atlas, app.writer, placement, string.as_bytes()).unwrap().1;
 
     unsafe {
-        gl::BindVertexArray(context.writer.vao);
-        gl::BindBuffer(gl::ARRAY_BUFFER, context.writer.points_vbo);
+        gl::BindVertexArray(app.writer.vao);
+        gl::BindBuffer(gl::ARRAY_BUFFER, app.writer.points_vbo);
         gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(0);
-        gl::BindBuffer(gl::ARRAY_BUFFER, context.writer.texcoords_vbo);
+        gl::BindBuffer(gl::ARRAY_BUFFER, app.writer.texcoords_vbo);
         gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE, 0, ptr::null());
         gl::EnableVertexAttribArray(1);
     }
 
-    let (sp, sp_text_color_loc) = create_shaders(&mut context);
+    let (sp, sp_text_color_loc) = create_shaders(&mut app);
 
     let tex = load_font_texture(&atlas, gl::CLAMP_TO_EDGE).unwrap();
 
@@ -402,22 +402,22 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         // Partial transparency.
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-        gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
+        gl::Viewport(0, 0, app.gl.width as i32, app.gl.height as i32);
     }
 
     // The main rendering loop.
-    while !context.gl.window.should_close() {
+    while !app.gl.window.should_close() {
         // // Update the text display if the frame buffer size changed.
-        let (width, height) = context.gl.window.get_framebuffer_size();
-        if (width != context.gl.width as i32) && (height != context.gl.height as i32) {
-            glfw_framebuffer_size_callback(&mut context, width as u32, height as u32);
-            point_count = text_to_screen(&context, &atlas, context.writer, placement, string.as_bytes()).unwrap().1;
+        let (width, height) = app.gl.window.get_framebuffer_size();
+        if (width != app.gl.width as i32) && (height != app.gl.height as i32) {
+            glfw_framebuffer_size_callback(&mut app, width as u32, height as u32);
+            point_count = text_to_screen(&app, &atlas, app.writer, placement, string.as_bytes()).unwrap().1;
         }
 
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
             gl::ClearColor(0.2, 0.2, 0.6, 1.0);
-            gl::Viewport(0, 0, context.gl.width as i32, context.gl.height as i32);
+            gl::Viewport(0, 0, app.gl.width as i32, app.gl.height as i32);
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, tex);
@@ -427,21 +427,21 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
             gl::Disable(gl::DEPTH_TEST);
             gl::Enable(gl::BLEND);
 
-            gl::BindVertexArray(context.writer.vao);
+            gl::BindVertexArray(app.writer.vao);
             gl::Uniform4f(sp_text_color_loc, 1.0, 1.0, 0.0, 1.0);
             gl::DrawArrays(gl::TRIANGLES, 0, point_count as GLint);
         }
 
-        context.gl.glfw.poll_events();
-        match context.gl.window.get_key(Key::Escape) {
+        app.gl.glfw.poll_events();
+        match app.gl.window.get_key(Key::Escape) {
             Action::Press | Action::Repeat => {
-                context.gl.window.set_should_close(true);
+                app.gl.window.set_should_close(true);
             }
             _ => {}
         }
 
         // Send the results to the output.
-        context.gl.window.swap_buffers();
+        app.gl.window.swap_buffers();
     }
 
     Ok(())
