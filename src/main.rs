@@ -21,7 +21,6 @@ use glfw::{Action, Context, Key};
 use std::cell::{Ref, RefMut, RefCell};
 use std::fmt;
 use std::io;
-use std::io::Write;
 use std::mem;
 use std::path::PathBuf;
 use std::process;
