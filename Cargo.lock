@@ -163,7 +163,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "fontview"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "bmfa 0.3.2 (git+https://github.com/stallmanifold/bmfa)",
  "gl_generator 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",

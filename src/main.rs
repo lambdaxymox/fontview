@@ -53,8 +53,7 @@ struct App {
     writer: GLTextWriter,
 }
 
-fn text_to_screen(app: &App, atlas: &bmfa::BitmapFontAtlas, mut writer: GLTextWriter, placement: TextPlacement, buf: &[u8]) -> io::Result<(usize, usize)> {
-    let st = str::from_utf8(buf).unwrap();
+fn text_to_screen(app: &App, atlas: &bmfa::BitmapFontAtlas, mut writer: GLTextWriter, placement: TextPlacement, st: &str) -> io::Result<(usize, usize)> {
     let scale_px = placement.scale_px;
     let height = app.gl.height;
     let width = app.gl.width;
@@ -379,7 +378,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
 
     // Load the text onto the GPU.
     let string = DEFAULT_TEXT;
-    let mut point_count = text_to_screen(&app, &atlas, app.writer, placement, string.as_bytes()).unwrap().1;
+    let mut point_count = text_to_screen(&app, &atlas, app.writer, placement, string).unwrap().1;
 
     unsafe {
         gl::BindVertexArray(app.writer.vao);
@@ -411,7 +410,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
         let (width, height) = app.gl.window.get_framebuffer_size();
         if (width != app.gl.width as i32) && (height != app.gl.height as i32) {
             glfw_framebuffer_size_callback(&mut app, width as u32, height as u32);
-            point_count = text_to_screen(&app, &atlas, app.writer, placement, string.as_bytes()).unwrap().1;
+            point_count = text_to_screen(&app, &atlas, app.writer, placement, string).unwrap().1;
         }
 
         unsafe {
