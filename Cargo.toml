@@ -1,7 +1,7 @@
 [package]
 name = "fontview"
 version = "0.3.1"
-authors = ["Stallmanifold <stallmanifold@gmail.com>"]
+authors = ["LambdaXymox <lambda.xymox@gmail.com>"]
 edition = "2018"
 build = "build.rs"
 description = "A shell utility for prototyping bitmapped fonts in computer graphics applications."
@@ -12,7 +12,7 @@ glfw = "0.29.0"
 log = "0.4.6"
 stb_image = "0.2.2"
 structopt = "0.2.18"
-bmfa = { git = "https://github.com/stallmanifold/bmfa" }
+bmfa = { git = "https://github.com/lambdaxymox/bmfa" }
 
 [build-dependencies]
 gl_generator = "0.11.0"
