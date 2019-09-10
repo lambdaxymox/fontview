@@ -1,11 +1,11 @@
 [package]
 name = "fontview"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["LambdaXymox <lambda.xymox@gmail.com>"]
 edition = "2018"
 build = "build.rs"
 description = "A shell utility for prototyping bitmapped fonts in computer graphics applications."
-keywords = ["games", "game development", "fonts", "graphics"]
+keywords = ["games", "game development", "fonts", "text", "graphics"]
 
 
 [dependencies]

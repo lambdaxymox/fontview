@@ -208,9 +208,7 @@ fn create_shaders(app: &mut App) -> (GLuint, GLint) {
     (sp, sp_text_color_loc)
 }
 
-///
 /// Load texture image into the GPU.
-///
 fn load_font_texture(atlas: &bmfa::BitmapFontAtlas, wrapping_mode: GLuint) -> Result<GLuint, String> {
     let mut tex = 0;
     unsafe {
@@ -273,12 +271,10 @@ fn create_text_writer() -> GLTextWriter {
     GLTextWriter::new(vao, points_vbo, texcoords_vbo)
 }
 
-///
 /// The GLFW frame buffer size callback function. This is normally set using
 /// the GLFW `glfwSetFramebufferSizeCallback` function; instead we explicitly
 /// handle window resizing in our state updates on the application side. Run this function
 /// whenever the size of the viewport changes.
-///
 #[inline]
 fn glfw_framebuffer_size_callback(app: &mut App, width: u32, height: u32) {
     app.gl.width = width;
@@ -302,9 +298,7 @@ impl fmt::Display for OptError {
 
 impl std::error::Error for OptError {}
 
-///
 /// The shell input options for `fontview`.
-///
 #[derive(Debug, StructOpt)]
 #[structopt(name = "fontview")]
 #[structopt(about = "A shell utility for view bitmapped font atlas files.")]
@@ -315,9 +309,7 @@ struct Opt {
     input_path: PathBuf,
 }
 
-///
 /// Verify the input options.
-///
 fn verify_opt(opt: &Opt) -> Result<(), OptError> {
     if !(opt.input_path.exists() && opt.input_path.is_file()) {
         return Err(OptError::InputFileDoesNotExist(opt.input_path.clone()));
@@ -406,7 +398,7 @@ fn run_app(opt: Opt) -> Result<(), Box<dyn std::error::Error>> {
 
     // The main rendering loop.
     while !app.gl.window.should_close() {
-        // // Update the text display if the frame buffer size changed.
+        // Update the text display if the frame buffer size changed.
         let (width, height) = app.gl.window.get_framebuffer_size();
         if (width != app.gl.width as i32) && (height != app.gl.height as i32) {
             glfw_framebuffer_size_callback(&mut app, width as u32, height as u32);
